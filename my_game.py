@@ -9,14 +9,13 @@ from pygame.sprite import *
 pygame.init()
 
 
-
 WIDTH = 1100
 HEIGHT = 400
 CAPTION = 'Traffic Simulator'
 
 speed = 0
 max_speed = 30
-velocity = [10,10]
+velocity = [2, 2]
 
 
 class Block(pygame.sprite.Sprite):
@@ -38,39 +37,41 @@ class Block(pygame.sprite.Sprite):
        # Update the position of this object by setting the values of rect.x and rect.y
        self.rect = self.image.get_rect()
 
-    def move(self, xp, a):
+    def move(self, velocity, a):
 
-        xp = self.x+xp  # new place for the car
+        new_x = self.x + velocity[0]  # new place for the car
+        new_y = self.y + velocity[1]
 
-        if xp > 1200:
-            xp = xp - 1200
-        dista = xp-a[0]
+        if velocity[0] > WIDTH:
+            new_x = new_x - WIDTH
+        if velocity[0] > HEIGHT:
+            new_y = new_y - HEIGHT
+        #dista = xp-a[0]
 
-        self.rect.left = xp  # move the car
-        self.x = xp  # update the car position
-        
+        self.rect.left = new_x  # move the car
+        self.x = new_x  # update the car position
+        # self.rect.right = new_y  # move the car
+        # self.y = new_y
+
 
 def traffic():
     frame = pygame.display.set_mode((WIDTH, HEIGHT))
-    xp = 100
-    car1 = Block((255,0,0),5,5, xp+0, 200)
+    car1 = Block((255, 0, 0), 10, 10, velocity[0] + 500, 600)
     all_cars = Group(car1)
 
-
     while True:
-        xp = 2
-        car1.move(xp, [xp+200,200])
+        car1.move(velocity, [200, 200])
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
 
-
         frame.fill((255, 255, 255))
         all_cars.draw(frame)
         display.update()
         pygame.display.flip()
+
 
 if __name__ == '__main__':
     traffic()
