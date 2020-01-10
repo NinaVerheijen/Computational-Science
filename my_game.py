@@ -1,6 +1,7 @@
 import pygame
 import sys
 import math
+import random
 from pygame import *
 from pygame.locals import *
 from pygame.sprite import *
@@ -35,32 +36,37 @@ class Block(pygame.sprite.Sprite):
 
        # Fetch the rectangle object that has the dimensions of the image
        # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
+       self.rect = self.image.get_rect(center=(x,y))
 
     def move(self, velocity, a):
 
         new_x = self.x + velocity[0]  # new place for the car
         new_y = self.y + velocity[1]
 
-        if velocity[0] > WIDTH:
-            new_x = new_x - WIDTH
-        if velocity[0] > HEIGHT:
-            new_y = new_y - HEIGHT
+        # if velocity[0] > WIDTH:
+        #     new_x = new_x - WIDTH
+        # if velocity[0] > HEIGHT:
+        #     new_y = new_y - HEIGHT
         #dista = xp-a[0]
 
-        self.rect.left = new_x  # move the car
-        self.x = new_x  # update the car position
-        # self.rect.right = new_y  # move the car
+        self.rect=self.rect.move(velocity[0],velocity[1]) # Move the car with the given velocity
+        # self.rect.left = new_x  # move the car
+        # self.x = new_x  # update the car position
+        # self.rect.left = new_y  # move the car
         # self.y = new_y
 
 
 def traffic():
     frame = pygame.display.set_mode((WIDTH, HEIGHT))
-    car1 = Block((255, 0, 0), 10, 10, velocity[0] + 500, 600)
+    car1 = Block((255, 0, 0), 10, 10, velocity[0] + 100, random.randrange(0,200,1))
     all_cars = Group(car1)
 
     while True:
-        car1.move(velocity, [200, 200])
+        car1.move(velocity, [100, 100])
+        # if velocity[0] > 10:
+        #     velocity[0] = -2
+        # else:
+        #     velocity[0] += 1
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
