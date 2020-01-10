@@ -15,7 +15,7 @@ CAPTION = 'Traffic Simulator'
 
 speed = 0
 max_speed = 30
-velocity = [2, 2]
+velocity = [0.5, 0.5]
 
 
 class Block(pygame.sprite.Sprite):
