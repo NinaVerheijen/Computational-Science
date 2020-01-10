@@ -71,20 +71,28 @@ def traffic():
 
     while True:
         chance = random.uniform(0, 1)
-        if chance < 0.07:
-            car = Vehicle(chance, (255, 0, 0), [10, 10], 0, random.randrange(5,400,35), 0.02, [0.2,0])
+        if chance < 0.01:
+            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.randrange(5,400,35), 0.1, [0.2,0])
             all_cars.add(car)
 
-        for m in all_cars:
-            m.move()
-
+        to_close = False
         for car in all_cars:
-            if car.speed < max_speed:
+            for c in all_cars:
+                # print(abs(c.x - car.x))
+                if abs(c.x - car.x) < 10 and car.y == c.y and car.x is not c.x:
+                    if car.x < c.x:
+                        car.speed -= 0.002
+                    else:
+                        c.speed -= 0.002
+                    to_close = True
+                    
+
+            if car.speed < max_speed and to_close is False:
                 car.speed += 0.0001
             car.move()
+            
 
-        # if pygame.sprite.collide_rect(car1, car2):
-        #     car2.direction[0] -= 0.4
+
 
         # if direction[0] > 10:
         #     direction[0] = -2
