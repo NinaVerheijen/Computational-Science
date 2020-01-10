@@ -19,10 +19,11 @@ speed = 0
 max_speed = 2 #130 km\h
 
 
-class Block(pygame.sprite.Sprite):
+class Vehicle(pygame.sprite.Sprite):
 
-    # Constructor. Pass in the color of the block,
+    # Constructor. Pass in the color of the Vehicle,
     # and its x and y position
+
     def __init__(self, color, size, x, y, speed, direction):
        # Call the parent class (Sprite) constructor
        pygame.sprite.Sprite.__init__(self)
@@ -68,7 +69,12 @@ def traffic():
     all_cars = Group(car1, car2)
 
     while True:
-
+        chance = random.uniform(0, 1)
+        if chance < 0.07:
+            car = Vehicle(chance, (255, 0, 0), 10, 10, velocity[0] + 0, random.randrange(5,400,35))
+            all_cars.add(car)
+        for m in all_cars:
+            m.move(velocity, [100, 100])
         for car in all_cars:
             if car.speed < max_speed:
                 car.speed += 0.0001
@@ -79,6 +85,7 @@ def traffic():
 
         # if direction[0] > 10:
         #     direction[0] = -2
+
         # else:
         #     direction[0] += 1
 
