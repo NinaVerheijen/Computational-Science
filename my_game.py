@@ -17,19 +17,20 @@ CAPTION = 'Traffic Simulator'
 
 speed = 0
 max_speed = 2 #130 km\h
-
+curr_speed = 2
 
 class Vehicle(pygame.sprite.Sprite):
 
     # Constructor. Pass in the color of the Vehicle,
     # and its x and y position
 
-    def __init__(self, color, size, x, y, speed, direction):
+    def __init__(self, ID, color, size, x, y, speed, direction):
        # Call the parent class (Sprite) constructor
        pygame.sprite.Sprite.__init__(self)
 
        # Create an image of the block, and fill it with a color.
        # This could also be an image loaded from the disk.
+       self.ID = ID
        self.image = pygame.Surface(size)
        self.image.fill(color)
        self.speed  = speed
@@ -64,24 +65,26 @@ def traffic():
     frame = pygame.display.set_mode((WIDTH, HEIGHT))
 
 
-    car1 = Block((255, 0, 0), [10, 10], 100, random.randrange(0,200,1), 0, [0.2,0])
-    car2 = Block((0, 255, 0), [10, 10], + 100, random.randrange(0, 200, 1), 0, [0.5,0])
-    all_cars = Group(car1, car2)
+    # car1 = Vehicle((255, 0, 0), [10, 10], 100, random.randrange(0,200,1), 0, [0.2,0])
+    # car2 = Vehicle((0, 255, 0), [10, 10], + 100, random.randrange(0, 200, 1), 0, [0.5,0])
+    all_cars = Group()
 
     while True:
         chance = random.uniform(0, 1)
         if chance < 0.07:
-            car = Vehicle(chance, (255, 0, 0), 10, 10, velocity[0] + 0, random.randrange(5,400,35))
+            car = Vehicle(chance, (255, 0, 0), [10, 10], 0, random.randrange(5,400,35), 0.02, [0.2,0])
             all_cars.add(car)
+
         for m in all_cars:
-            m.move(velocity, [100, 100])
+            m.move()
+
         for car in all_cars:
             if car.speed < max_speed:
                 car.speed += 0.0001
             car.move()
 
-        if pygame.sprite.collide_rect(car1, car2):
-            car2.direction[0] -= 0.4
+        # if pygame.sprite.collide_rect(car1, car2):
+        #     car2.direction[0] -= 0.4
 
         # if direction[0] > 10:
         #     direction[0] = -2
