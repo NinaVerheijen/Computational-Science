@@ -78,10 +78,9 @@ def traffic():
         to_close = False
         for car in all_cars:
             for c in all_cars:
-                # print(abs(c.x - car.x))
-                if abs(c.x - car.x) < 10 and car.y == c.y and car.x is not c.x:
+                if abs(c.x - car.x) < 8 and car.y == c.y and car.x is not c.x:
                     if car.x < c.x:
-                        car.speed -= 0.002
+                        car.speed -= 0.02
                     else:
                         c.speed -= 0.002
                     to_close = True
