@@ -10,7 +10,7 @@ from pygame.sprite import *
 
 pygame.init()
 
-
+random.seed(2)
 WIDTH = 1100
 HEIGHT = 400
 CAPTION = 'Traffic Simulator'
@@ -71,8 +71,8 @@ def traffic():
 
     while True:
         chance = random.uniform(0, 1)
-        if chance < 0.01:
-            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.randrange(5,400,35), 0.1, [0.2,0])
+        if chance < 0.02:
+            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.randrange(10,200,35), 0.1 * random.randrange(1,10,1), [0.2,0])
             all_cars.add(car)
 
         to_close = False
