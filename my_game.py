@@ -1,6 +1,6 @@
 import pygame
 import sys
-import math
+import math as Math
 import random
 import time
 from pygame import *
@@ -38,16 +38,51 @@ class Vehicle(pygame.sprite.Sprite):
        self.y = int(y)
        self.direction = direction
        self.lane = 0
+       self.size = size
 
        # Fetch the rectangle object that has the dimensions of the image
        # Update the position of this object by setting the values of rect.x and rect.y
        self.rect = self.image.get_rect(center=(x,y))
-       self.rect.size = (size[0] + 10, size[1])
+
+    def desired_gap(self, v, d_v):
+        """
+        s_0 is minimum bumper to bumper gap -> 2m
+        a is acceleration in every day traffic -> 0.3m/s^2
+        b is comfortable (breaking) deceleration in everyday traffic -> 3.0m/s^2
+        delta is acceleration exponent -> 4
+        T is desired safety time -> 1.5 s
+        s is current gap
+        """
+        s_0 = self.size[0] # minimum gap between cars
+        a = 0.003
+        b = 0.03
+        T = 1.5                   
+        des_gap = s_0 + max(0, v*T + ((v*d_v)/ (2*Math.sqrt(a*b))))
+        return des_gap
+
+    def comp_acc(self, s):
+        a = 0.003
+        v_0 = max_speed
+        v = self.speed
+        d = 4
+        d_v = v/v_0
+        
+        print("s:", s)
+
+        if s == 0:
+            s = 0.00000000000001
+    
+        acc = a*(1-(v/v_0)**d) - a*(((self.desired_gap(v,d_v) / s)) **2)
+        return acc
 
     def move(self):
 
         new_x = self.x + self.speed  # new place for the car
         new_y = self.y + self.direction[1]
+
+
+
+        print("new_x:", new_x)
 
         # if direction[0] > WIDTH:
         #     new_x = new_x - WIDTH
@@ -79,38 +114,59 @@ def traffic():
 
     while True:
         chance = random.uniform(0, 1)
-        if chance < 0.01:
-            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(lanes), 0.1 * random.randrange(1,5,1), [0.2,0])
-            all_cars.add(car)
-            if car.y == 50:
-                lane_1.append(car)
-                car.lane = 1
-            elif car.y == 100:
-                lane_2.append(car)
-                car.lane = 2
-            elif car.y == 150:
-                lane_3.append(car)
-                car.lane = 3
-            else:
-                lane_4.append(car)
-                car.lane = 4
+        
+        car1 = Vehicle(chance, (255, 0, 0), [10, 10], 300, 250, 0.1, [0.2, 0])
+        car2 = Vehicle(chance, (255, 0, 0), [10, 10], 100, 250, 0.4, [0.2, 0])
+        all_cars.add(car1, car2)
 
-        for la in range(len(all_lanes)):
-            for i in range(len(all_lanes[la])):
-                to_close = False
-                car = all_lanes[la][i]
-                if car.x > WIDTH:
-                    all_cars.remove(car)
-                if i == len(all_lanes[la]) - 1:
-                    next_car = None
-                else:
-                    next_car = all_lanes[la][i+1]
-                    if abs(next_car.x - car.x) < 30:
-                        car.speed = next_car.speed - 0.005
-                        to_close = True
-                if car.speed < max_speed and to_close is False:
-                    car.speed += 0.001
-                car.move()
+        for c in all_cars:
+            if c.x > WIDTH:
+                all_cars.remove(c)
+            if c == car1:
+                next_car = None
+                dist = 10000
+            else:
+                next_car = car1
+                # print("next:", next_car.x)
+                # print("car:", c.x)
+                dist = float(next_car.x - c.x)
+            c.speed = c.speed * c.comp_acc(dist)
+            c.move()
+
+        # if chance < 0.01:
+        #     car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(lanes), 0.1 * random.randrange(1,5,1), [0.2,0])
+        #     all_cars.add(car)
+            # if car.y == 50:
+            #     lane_1.append(car)
+            #     car.lane = 1
+            # elif car.y == 100:
+            #     lane_2.append(car)
+            #     car.lane = 2
+            # elif car.y == 150:
+            #     lane_3.append(car)
+            #     car.lane = 3
+            # else:
+            #     lane_4.append(car)
+            #     car.lane = 4
+
+
+
+        # for la in range(len(all_lanes)):
+        #     for i in range(len(all_lanes[la])):
+        #         to_close = False
+        #         car = all_lanes[la][i]
+        #         if car.x > WIDTH:
+        #             all_cars.remove(car)
+        #         if i == len(all_lanes[la]) - 1:
+        #             next_car = None
+        #         else:
+        #             next_car = all_lanes[la][i+1]
+        #             if abs(next_car.x - car.x) < 30:
+        #                 car.speed = next_car.speed - 0.005
+        #                 to_close = True
+        #         if car.speed < max_speed and to_close is False:
+        #             car.speed += 0.001
+        #         car.move()
 
 
 
