@@ -2,7 +2,7 @@ import pygame
 import sys
 import math
 import random
-import time
+import time as tijd
 from pygame import *
 from pygame.locals import *
 from pygame.sprite import *
@@ -10,6 +10,11 @@ from pygame.sprite import *
 
 pygame.init()
 
+lane1 = 40
+lane2 = 80
+lane3 = 120
+
+lanes = [lane1, lane2, lane3]
 random.seed(2)
 WIDTH = 1100
 HEIGHT = 400
@@ -24,25 +29,27 @@ class Vehicle(pygame.sprite.Sprite):
     # Constructor. Pass in the color of the Vehicle,
     # and its x and y position
 
-    def __init__(self, ID, color, size, x, y, speed, direction):
+    def __init__(self, ID, color, size, x, lane, speed, direction):
        # Call the parent class (Sprite) constructor
        pygame.sprite.Sprite.__init__(self)
 
        # Create an image of the block, and fill it with a color.
        # This could also be an image loaded from the disk.
+       self.lane = lane
        self.ID = ID
        self.image = pygame.Surface(size)
        self.image.fill(color)
        self.speed  = speed
        self.x = int(x)  # variable denoting x position of car
-       self.y = int(y)
+       self.y = int(lane)
        self.direction = direction
-       self.lane = 0
+       self.lane = lane / 50
 
        # Fetch the rectangle object that has the dimensions of the image
        # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect(center=(x,y))
+       self.rect = self.image.get_rect(center=(x,lane))
        self.rect.size = (size[0] + 10, size[1])
+
 
     def move(self):
 
@@ -63,9 +70,26 @@ class Vehicle(pygame.sprite.Sprite):
         self.y = new_y
 
 
+class Road:
+
+    def __init__(self, lanes, max_speed):
+
+        self.lanes = []
+        self.max_speed = max_speed
+
+        for number_lanes in range(lanes):
+            self.lanes.append(number_lanes + 1)
+
+    def add_lane(self):
+        new_lane = len(self.lanes) + 1
+        self.lanes.append(new_lane)
+
 def traffic():
     frame = pygame.display.set_mode((WIDTH, HEIGHT))
-
+    road = Road(3,50)
+    print(road.lanes)
+    road.add_lane()
+    print(road.lanes)
 
     # car1 = Vehicle((255, 0, 0), [10, 10], 100, random.randrange(0,200,1), 0, [0.2,0])
     # car2 = Vehicle((0, 255, 0), [10, 10], + 100, random.randrange(0, 200, 1), 0, [0.5,0])
@@ -112,23 +136,53 @@ def traffic():
                     car.speed += 0.001
                 car.move()
 
-
-
-        # for car in all_cars:
-
-        #     to_close = False
-        #     for c in all_cars:
-        #         if abs(c.x - car.x) < 80 and car.y == c.y and car.x is not c.x:
-        #             if car.x < c.x:
-        #                 car.speed = c.speed
-        #                 to_close = True
-                   
-                    
-
-        #     if car.speed < max_speed and to_close is False:
-        #         car.speed += 0.0001
-        #     car.move()
             
+# =======
+#     lane1_group = pygame.sprite.Group()
+#     lane2_group = Group()
+#     lane3_group = Group()
+
+#     while True:
+#         chance = random.uniform(0, 1)
+#         if chance < 0.3:
+#             car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(lanes), 0.1 * random.randrange(1,10,1), [0.2,0])
+#             if car.lane == lane1:
+#                 lane1_group.add(car)
+#             elif car.lane == lane2:
+#                 lane2_group.add(car)
+#             elif car.lane == lane3:   
+#                 lane3_group.add(car)  
+#                 # print(lane3_group)   
+#             all_cars.add(car)
+
+#         to_close = False
+
+
+#         for car in all_cars:
+#             cur_lane = None
+#             if lane1_group.has(car):
+#                 cur_lane = lane1_group
+#             elif lane2_group.has(car):
+#                 cur_lane = lane2_group
+#             elif lane3_group.has(car):
+#                 cur_lane = lane3_group
+#                 # print(car.lane, car.ID)
+#                 # print(len(lane2_group))
+#             # print(car.groups())
+#             for c in cur_lane:
+#                 # print(abs(c.x - car.x))
+#                 if abs(c.x - car.x) < 10 and car.y == c.y and car.x is not c.x:
+#                     if car.x < c.x:
+#                         car.speed -= 0.002
+#                     else:
+#                         c.speed -= 0.002
+#                     to_close = True
+   
+
+#             if car.speed < max_speed and to_close is False:
+#                 car.speed += 0.0001
+#             car.move()
+
 
 
 
