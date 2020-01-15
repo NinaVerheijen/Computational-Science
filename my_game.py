@@ -2,28 +2,38 @@ import pygame
 import sys
 import math as Math
 import random
-import time
+import time as tijd
 from pygame import *
 from pygame.locals import *
 from pygame.sprite import *
 
 
 pygame.init()
+clock = pygame.time.Clock()
+clock.tick(60)
 
 random.seed(2)
-WIDTH = 1100
+WIDTH = 1100 # 8 km?
 HEIGHT = 400
+road_length = 18
 CAPTION = 'Traffic Simulator'
 
-speed = 0
-max_speed = 1.8 #130 km\h
-curr_speed = 2
+max_speed = 130 #130 km\h
+
+def meter_to_pixel(distance):
+    one_m = WIDTH/(road_length * 1000)
+    dist = distance*one_m
+    return dist
+
+def pixel_to_meter(pixels):
+    one_p = (road_length * 1000)/WIDTH
+    dist = pixels*one_p
+    return dist
 
 class Vehicle(pygame.sprite.Sprite):
 
     # Constructor. Pass in the color of the Vehicle,
     # and its x and y position
-
     def __init__(self, ID, color, size, x, y, speed, direction):
        # Call the parent class (Sprite) constructor
        pygame.sprite.Sprite.__init__(self)
@@ -34,7 +44,7 @@ class Vehicle(pygame.sprite.Sprite):
        self.image = pygame.Surface(size)
        self.image.fill(color)
        self.speed  = speed
-       self.x = int(x)  # variable denoting x position of car
+       self.x = int(x)  
        self.y = int(y)
        self.direction = direction
        self.lane = 0
@@ -53,45 +63,29 @@ class Vehicle(pygame.sprite.Sprite):
         T is desired safety time -> 1.5 s
         s is current gap
         """
-        s_0 = self.size[0] # minimum gap between cars
-        a = 0.003
-        b = 0.03
+        s_0 = 300  # minimum gap between cars
+        a = 0.3
+        b = 3
         T = 1.5                   
         des_gap = s_0 + max(0, v*T + ((v*d_v)/ (2*Math.sqrt(a*b))))
         return des_gap
 
-    def comp_acc(self, s):
-        a = 0.003
+    def comp_acc(self, s, lead_speed):
+        a = 0.3
         v_0 = max_speed
         v = self.speed
         d = 4
-        d_v = v/v_0
-        
-        print("s:", s)
-
-        if s == 0:
-            s = 0.00000000000001
+        d_v = abs(v - lead_speed)
+        a_free = a*(1-(v/v_0)**d)
+        a_int = a*((self.desired_gap(v, d_v) / s)**2)
     
-        acc = a*(1-(v/v_0)**d) - a*(((self.desired_gap(v,d_v) / s)) **2)
+        acc =  a_free - a_int
         return acc
 
     def move(self):
-
-        new_x = self.x + self.speed  # new place for the car
+        new_x = self.x + meter_to_pixel(self.speed)  # new place for the car
         new_y = self.y + self.direction[1]
 
-
-
-        print("new_x:", new_x)
-
-        # if direction[0] > WIDTH:
-        #     new_x = new_x - WIDTH
-        # if direction[0] > HEIGHT:
-        #     new_y = new_y - HEIGHT
-        #dista = xp-a[0]
-
-
-        # self.rect=self.rect.move(direction[0],direction[1]) # Move the car with the given direction
         self.rect.right = new_x  # move the car
         self.x = new_x  # update the car position
         self.rect.bottom = new_y  # move the car
@@ -99,102 +93,47 @@ class Vehicle(pygame.sprite.Sprite):
 
 
 def traffic():
-    frame = pygame.display.set_mode((WIDTH, HEIGHT))
-
-
-    # car1 = Vehicle((255, 0, 0), [10, 10], 100, random.randrange(0,200,1), 0, [0.2,0])
-    # car2 = Vehicle((0, 255, 0), [10, 10], + 100, random.randrange(0, 200, 1), 0, [0.5,0])
+    frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
     all_cars = Group()
-    lane_1 = []
-    lane_2 = []
-    lane_3 = []
-    lane_4 = []
-    lanes = [50, 100, 150, 200]
-    all_lanes = [lane_1, lane_2, lane_3, lane_4]
 
     while True:
+        tijd.sleep(0.05)
         chance = random.uniform(0, 1)
-        
-        car1 = Vehicle(chance, (255, 0, 0), [10, 10], 300, 250, 0.1, [0.2, 0])
-        car2 = Vehicle(chance, (255, 0, 0), [10, 10], 100, 250, 0.4, [0.2, 0])
-        all_cars.add(car1, car2)
 
-        for c in all_cars:
-            if c.x > WIDTH:
-                all_cars.remove(c)
-            if c == car1:
-                next_car = None
-                dist = 10000
-            else:
-                next_car = car1
-                # print("next:", next_car.x)
-                # print("car:", c.x)
-                dist = float(next_car.x - c.x)
-            c.speed = c.speed * c.comp_acc(dist)
-            c.move()
+        if chance < 0.4:
+            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice([50,100,150,200]), 30 + random.randrange(-10,10,2), [0.2,0])
+            all_cars.add(car)
 
-        # if chance < 0.01:
-        #     car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(lanes), 0.1 * random.randrange(1,5,1), [0.2,0])
-        #     all_cars.add(car)
-            # if car.y == 50:
-            #     lane_1.append(car)
-            #     car.lane = 1
-            # elif car.y == 100:
-            #     lane_2.append(car)
-            #     car.lane = 2
-            # elif car.y == 150:
-            #     lane_3.append(car)
-            #     car.lane = 3
-            # else:
-            #     lane_4.append(car)
-            #     car.lane = 4
+        for car in all_cars:
+            for c in all_cars:
 
+                # Only check cars that are in same lane and in front of car
+                if car.y == c.y and car.x < c.x:
+                    gap = pixel_to_meter(c.x - car.x)
+                    car.speed += car.comp_acc(gap, c.speed)
 
+                    # prevent cars from going backwards.
 
-        # for la in range(len(all_lanes)):
-        #     for i in range(len(all_lanes[la])):
-        #         to_close = False
-        #         car = all_lanes[la][i]
-        #         if car.x > WIDTH:
-        #             all_cars.remove(car)
-        #         if i == len(all_lanes[la]) - 1:
-        #             next_car = None
-        #         else:
-        #             next_car = all_lanes[la][i+1]
-        #             if abs(next_car.x - car.x) < 30:
-        #                 car.speed = next_car.speed - 0.005
-        #                 to_close = True
-        #         if car.speed < max_speed and to_close is False:
-        #             car.speed += 0.001
-        #         car.move()
+                    if car.speed < 0:
+                        car.speed = 0
+                # If there is no car in front of current car.
+                else:
+                    gap = 1000000
+                    car.speed += car.comp_acc(gap, car.speed)
 
+                    if car.speed < 0:
+                        car.speed = 0
 
+            car.move()
 
-        # for car in all_cars:
-
-        #     to_close = False
-        #     for c in all_cars:
-        #         if abs(c.x - car.x) < 80 and car.y == c.y and car.x is not c.x:
-        #             if car.x < c.x:
-        #                 car.speed = c.speed
-        #                 to_close = True
-                   
-                    
-
-        #     if car.speed < max_speed and to_close is False:
-        #         car.speed += 0.0001
-        #     car.move()
-            
-
-
-
-        # if direction[0] > 10:
-        #     direction[0] = -2
-
-        # else:
-        #     direction[0] += 1
+            # Remove cars that are out of the frame.
+            if car.x > WIDTH:
+                all_cars.remove(car)
 
         for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
