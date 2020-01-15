@@ -9,16 +9,17 @@ from pygame.sprite import *
 
 
 pygame.init()
-clock = pygame.time.Clock()
-clock.tick(60)
+# clock = pygame.time.Clock()
+# clock.tick(60)
 
 random.seed(2)
 WIDTH = 1100 # 8 km?
 HEIGHT = 400
-road_length = 18
+road_length = 12
 CAPTION = 'Traffic Simulator'
 
-max_speed = 130 #130 km\h
+max_speed = 130
+ #130 km\h
 
 def meter_to_pixel(distance):
     one_m = WIDTH/(road_length * 1000)
@@ -83,7 +84,7 @@ class Vehicle(pygame.sprite.Sprite):
         return acc
 
     def move(self):
-        new_x = self.x + meter_to_pixel(self.speed)  # new place for the car
+        new_x = self.x + meter_to_pixel(self.speed) # new place for the car
         new_y = self.y + self.direction[1]
 
         self.rect.right = new_x  # move the car
@@ -100,7 +101,7 @@ def traffic():
         tijd.sleep(0.05)
         chance = random.uniform(0, 1)
 
-        if chance < 0.4:
+        if chance < 0.1:
             car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice([50,100,150,200]), 30 + random.randrange(-10,10,2), [0.2,0])
             all_cars.add(car)
 
