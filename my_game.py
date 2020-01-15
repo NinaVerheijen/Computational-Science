@@ -9,19 +9,18 @@ from pygame.sprite import *
 
 
 pygame.init()
-
 lane1 = 40
 lane2 = 80
 lane3 = 120
 
 lanes = [lane1, lane2, lane3]
 random.seed(2)
-WIDTH = 1100
-HEIGHT = 400
+WIDTH = 3000
+HEIGHT = 1000
 CAPTION = 'Traffic Simulator'
 
 speed = 0
-max_speed = 1.8 #130 km\h
+max_speed = 20 #130 km\h
 curr_speed = 2
 
 class Vehicle(pygame.sprite.Sprite):
@@ -35,7 +34,6 @@ class Vehicle(pygame.sprite.Sprite):
 
        # Create an image of the block, and fill it with a color.
        # This could also be an image loaded from the disk.
-       self.lane = lane
        self.ID = ID
        self.image = pygame.Surface(size)
        self.image.fill(color)
@@ -76,59 +74,64 @@ class Road:
 
         self.lanes = []
         self.max_speed = max_speed
-
+        self.pos_lanes = []
+        
+        # Initialize the starting lanes
         for number_lanes in range(lanes):
-            self.lanes.append(number_lanes + 1)
+            self.lanes.append([])
+            self.pos_lanes.append(50 * (number_lanes+1))
 
+    # Add new lane to the road
     def add_lane(self):
-        new_lane = len(self.lanes) + 1
-        self.lanes.append(new_lane)
+        self.lanes.append([])
+        self.pos_lanes.append(50 * (len(self.lanes)))
+
+    # Delete the last lane and delete all cars on that lane
+    def delete_lane(self, all_cars):
+        for delete_cars in all_cars:
+            if delete_cars.y == self.pos_lanes[-1]:
+                all_cars.remove(delete_cars)
+        self.lanes.pop()
+        self.pos_lanes.pop()
+
+
 
 def traffic():
-    frame = pygame.display.set_mode((WIDTH, HEIGHT))
-    road = Road(3,50)
-    print(road.lanes)
-    road.add_lane()
-    print(road.lanes)
+    frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
-    # car1 = Vehicle((255, 0, 0), [10, 10], 100, random.randrange(0,200,1), 0, [0.2,0])
-    # car2 = Vehicle((0, 255, 0), [10, 10], + 100, random.randrange(0, 200, 1), 0, [0.5,0])
     all_cars = Group()
-    lane_1 = []
-    lane_2 = []
-    lane_3 = []
-    lane_4 = []
-    lanes = [50, 100, 150, 200]
-    all_lanes = [lane_1, lane_2, lane_3, lane_4]
+    # Make the road
+    road = Road(5,50)
+    print(road.lanes, road.pos_lanes)
+    road.add_lane()
+    print(road.lanes, road.pos_lanes)
+    road.delete_lane(all_cars)
+    print(road.lanes)
+    
+
 
     while True:
         chance = random.uniform(0, 1)
-        if chance < 0.01:
-            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(lanes), 0.1 * random.randrange(1,5,1), [0.2,0])
+        if chance < 0.1:
+            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(road.pos_lanes), 0.5 * random.randrange(1,5,1), [0.2,0])
             all_cars.add(car)
-            if car.y == 50:
-                lane_1.append(car)
-                car.lane = 1
-            elif car.y == 100:
-                lane_2.append(car)
-                car.lane = 2
-            elif car.y == 150:
-                lane_3.append(car)
-                car.lane = 3
-            else:
-                lane_4.append(car)
-                car.lane = 4
 
-        for la in range(len(all_lanes)):
-            for i in range(len(all_lanes[la])):
+            # put car in the right lane and keep track of which lane the car is
+            for number in range(len(road.pos_lanes)):
+                if car.y == road.pos_lanes[number]:
+                    road.lanes[number].append(car)
+                    print(car.lane)
+
+        for la in range(len(road.lanes)):
+            for i in range(len(road.lanes[la])):
                 to_close = False
-                car = all_lanes[la][i]
+                car = road.lanes[la][i]
                 if car.x > WIDTH:
                     all_cars.remove(car)
-                if i == len(all_lanes[la]) - 1:
+                if i == len(road.lanes[la]) - 1:
                     next_car = None
                 else:
-                    next_car = all_lanes[la][i+1]
+                    next_car = road.lanes[la][i+1]
                     if abs(next_car.x - car.x) < 30:
                         car.speed = next_car.speed - 0.005
                         to_close = True
@@ -136,63 +139,17 @@ def traffic():
                     car.speed += 0.001
                 car.move()
 
-            
-# =======
-#     lane1_group = pygame.sprite.Group()
-#     lane2_group = Group()
-#     lane3_group = Group()
+        if len(road.lanes[-1]) >= 2:
+            road.delete_lane(all_cars)
+            road.add_lane()
+            road.add_lane()
 
-#     while True:
-#         chance = random.uniform(0, 1)
-#         if chance < 0.3:
-#             car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(lanes), 0.1 * random.randrange(1,10,1), [0.2,0])
-#             if car.lane == lane1:
-#                 lane1_group.add(car)
-#             elif car.lane == lane2:
-#                 lane2_group.add(car)
-#             elif car.lane == lane3:   
-#                 lane3_group.add(car)  
-#                 # print(lane3_group)   
-#             all_cars.add(car)
-
-#         to_close = False
-
-
-#         for car in all_cars:
-#             cur_lane = None
-#             if lane1_group.has(car):
-#                 cur_lane = lane1_group
-#             elif lane2_group.has(car):
-#                 cur_lane = lane2_group
-#             elif lane3_group.has(car):
-#                 cur_lane = lane3_group
-#                 # print(car.lane, car.ID)
-#                 # print(len(lane2_group))
-#             # print(car.groups())
-#             for c in cur_lane:
-#                 # print(abs(c.x - car.x))
-#                 if abs(c.x - car.x) < 10 and car.y == c.y and car.x is not c.x:
-#                     if car.x < c.x:
-#                         car.speed -= 0.002
-#                     else:
-#                         c.speed -= 0.002
-#                     to_close = True
-   
-
-#             if car.speed < max_speed and to_close is False:
-#                 car.speed += 0.0001
-#             car.move()
-
-
-
-
-        # if direction[0] > 10:
-        #     direction[0] = -2
-
-        # else:
-        #     direction[0] += 1
-
+        # quit pygame
         for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+            
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
