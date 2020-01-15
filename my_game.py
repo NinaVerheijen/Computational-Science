@@ -9,10 +9,13 @@ from pygame.sprite import *
 
 
 pygame.init()
-# clock = pygame.time.Clock()
-# clock.tick(60)
 
+clock = pygame.time.Clock()
+clock.tick(60)
+
+lanes = [lane1, lane2, lane3]
 random.seed(2)
+
 WIDTH = 1100 # 8 km?
 HEIGHT = 400
 road_length = 12
@@ -35,7 +38,9 @@ class Vehicle(pygame.sprite.Sprite):
 
     # Constructor. Pass in the color of the Vehicle,
     # and its x and y position
-    def __init__(self, ID, color, size, x, y, speed, direction):
+
+    def __init__(self, ID, color, size, x, lane, speed, direction):
+
        # Call the parent class (Sprite) constructor
        pygame.sprite.Sprite.__init__(self)
 
@@ -45,15 +50,18 @@ class Vehicle(pygame.sprite.Sprite):
        self.image = pygame.Surface(size)
        self.image.fill(color)
        self.speed  = speed
-       self.x = int(x)  
-       self.y = int(y)
+
+       self.x = int(x)  # variable denoting x position of car
+       self.y = int(lane)
        self.direction = direction
-       self.lane = 0
+       self.lane = lane / 50
        self.size = size
 
        # Fetch the rectangle object that has the dimensions of the image
        # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect(center=(x,y))
+       self.rect = self.image.get_rect(center=(x,lane))
+       self.rect.size = (size[0] + 10, size[1])
+
 
     def desired_gap(self, v, d_v):
         """
@@ -67,7 +75,7 @@ class Vehicle(pygame.sprite.Sprite):
         s_0 = 300  # minimum gap between cars
         a = 0.3
         b = 3
-        T = 1.5                   
+        T = 1.5
         des_gap = s_0 + max(0, v*T + ((v*d_v)/ (2*Math.sqrt(a*b))))
         return des_gap
 
@@ -79,7 +87,7 @@ class Vehicle(pygame.sprite.Sprite):
         d_v = abs(v - lead_speed)
         a_free = a*(1-(v/v_0)**d)
         a_int = a*((self.desired_gap(v, d_v) / s)**2)
-    
+
         acc =  a_free - a_int
         return acc
 
@@ -93,17 +101,62 @@ class Vehicle(pygame.sprite.Sprite):
         self.y = new_y
 
 
+class Road:
+
+    def __init__(self, lanes, max_speed):
+
+        self.lanes = []
+        self.max_speed = max_speed
+        self.pos_lanes = []
+
+        # Initialize the starting lanes
+        for number_lanes in range(lanes):
+            self.lanes.append([])
+            self.pos_lanes.append(50 * (number_lanes+1))
+
+    # Add new lane to the road
+    def add_lane(self):
+        self.lanes.append([])
+        self.pos_lanes.append(50 * (len(self.lanes)))
+
+    # Delete the last lane and delete all cars on that lane
+    def delete_lane(self, all_cars):
+        for delete_cars in all_cars:
+            if delete_cars.y == self.pos_lanes[-1]:
+                all_cars.remove(delete_cars)
+        self.lanes.pop()
+        self.pos_lanes.pop()
+
+
+
 def traffic():
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+
     all_cars = Group()
+    # Make the road
+    road = Road(5,50)
+    print(road.lanes, road.pos_lanes)
+    road.add_lane()
+    print(road.lanes, road.pos_lanes)
+    road.delete_lane(all_cars)
+    print(road.lanes)
+
+
+
 
     while True:
         tijd.sleep(0.05)
         chance = random.uniform(0, 1)
 
         if chance < 0.1:
-            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice([50,100,150,200]), 30 + random.randrange(-10,10,2), [0.2,0])
+            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(road.pos_lanes), 30 + random.randrange(-10,10,2), [0.2,0])
             all_cars.add(car)
+
+            # put car in the right lane and keep track of which lane the car is
+            for number in range(len(road.pos_lanes)):
+                if car.y == road.pos_lanes[number]:
+                    road.lanes[number].append(car)
+                    print(car.lane)
 
         for car in all_cars:
             for c in all_cars:
@@ -126,15 +179,21 @@ def traffic():
                         car.speed = 0
 
             car.move()
-
-            # Remove cars that are out of the frame.
             if car.x > WIDTH:
                 all_cars.remove(car)
+
+        if len(road.lanes[-1]) >= 2:
+            road.delete_lane(all_cars)
+            road.add_lane()
+            road.add_lane()
+
+        # quit pygame
 
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     pygame.quit()
+
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
