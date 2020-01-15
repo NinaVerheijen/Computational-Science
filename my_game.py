@@ -13,11 +13,11 @@ pygame.init()
 clock = pygame.time.Clock()
 clock.tick(60)
 
-lanes = [lane1, lane2, lane3]
+# lanes = [lane1, lane2, lane3]
 random.seed(2)
 
-WIDTH = 1100 # 8 km?
-HEIGHT = 400
+WIDTH = 4000 # 8 km?
+HEIGHT = 450
 road_length = 12
 CAPTION = 'Traffic Simulator'
 
@@ -72,7 +72,7 @@ class Vehicle(pygame.sprite.Sprite):
         T is desired safety time -> 1.5 s
         s is current gap
         """
-        s_0 = 300  # minimum gap between cars
+        s_0 = 200  # minimum gap between cars
         a = 0.3
         b = 3
         T = 1.5
@@ -135,11 +135,11 @@ def traffic():
     all_cars = Group()
     # Make the road
     road = Road(5,50)
-    print(road.lanes, road.pos_lanes)
+    # print(road.lanes, road.pos_lanes)
     road.add_lane()
-    print(road.lanes, road.pos_lanes)
+    # print(road.lanes, road.pos_lanes)
     road.delete_lane(all_cars)
-    print(road.lanes)
+    # print(road.lanes)
 
 
 
@@ -148,7 +148,7 @@ def traffic():
         tijd.sleep(0.05)
         chance = random.uniform(0, 1)
 
-        if chance < 0.1:
+        if chance < 0.2:
             car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(road.pos_lanes), 30 + random.randrange(-10,10,2), [0.2,0])
             all_cars.add(car)
 
@@ -156,7 +156,7 @@ def traffic():
             for number in range(len(road.pos_lanes)):
                 if car.y == road.pos_lanes[number]:
                     road.lanes[number].append(car)
-                    print(car.lane)
+                    # print(car.lane)
 
         for car in all_cars:
             for c in all_cars:
