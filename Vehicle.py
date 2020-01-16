@@ -44,6 +44,9 @@ class Vehicle(pygame.sprite.Sprite):
        self.direction = direction
        self.lane = lane / 50
        self.size = size
+       self.switch = False
+       self.left_right = 0
+       self.left_or_right = None
 
        # Fetch the rectangle object that has the dimensions of the image
        # Update the position of this object by setting the values of rect.x and rect.y
@@ -81,6 +84,7 @@ class Vehicle(pygame.sprite.Sprite):
 
     def move(self):
         new_x = self.x + meter_to_pixel(self.speed)  # new place for the car
+        new_y = self.y
 
         self.rect.right = new_x  # move the car
         self.x = new_x  # update the car position

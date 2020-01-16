@@ -20,6 +20,7 @@ clock.tick(60)
 # lanes = [lane1, lane2, lane3]
 random.seed(2)
 
+WIDTH = 1100 # 8 km?
 HEIGHT = 450
 road_length = 12
 CAPTION = 'Traffic Simulator'
@@ -53,6 +54,8 @@ def traffic():
         tijd.sleep(0.05)
         chance = random.uniform(0, 1)
 
+        if chance < 0.3:
+            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
             all_cars.add(car)
 
             # put car in the right lane and keep track of which lane the car is
@@ -61,6 +64,32 @@ def traffic():
                     road.lanes[number].append(car)
 
         for car in all_cars:
+            change_lanes = random.uniform(0, 1)
+
+            if change_lanes < 0.01:
+                car.switch = True
+
+            if car.switch is True:
+                if car.y in road.pos_lanes:
+                    car.left_or_right = random.uniform(0, 1)
+                    if car.lane * 50 == road.pos_lanes[0]:
+                        car.left_or_right = 1
+                        
+                    if car.lane * 50 == road.pos_lanes[-1]:
+                        car.left_or_right = 0
+
+                if car.left_or_right < 0.5:
+                    car.left_right = -1 
+                elif car.left_or_right >= 0.5:
+                    car.left_right = 1   
+
+                car.y += car.left_right
+
+                if car.y in road.pos_lanes:
+                    car.lane = car.y / 50
+                    car.switch = False
+
+
             for c in all_cars:
 
                 # Only check cars that are in same lane and in front of car
@@ -71,6 +100,7 @@ def traffic():
                     # prevent cars from going backwards.
                     if car.speed < 0:
                         car.speed = 0
+
                 # If there is no car in front of current car.
                 else:
                     gap = 1000000
@@ -78,11 +108,16 @@ def traffic():
 
                     if car.speed < 0:
                         car.speed = 0
+            
 
             car.move()
             if car.x > WIDTH:
                 all_cars.remove(car)
 
+        # if len(road.lanes[-1]) >= 2:
+        #     road.delete_lane(all_cars)
+        #     road.add_lane()
+        #     road.add_lane()
 
         # quit pygame
 
@@ -96,6 +131,12 @@ def traffic():
                 exit()
 
         frame.fill((255, 255, 255))
+
+        # Draw the lanes
+        pygame.draw.line(frame, (0, 0, 0), (0, road.pos_lanes[0] - 25), (WIDTH, road.pos_lanes[0] - 25))
+        for lane in road.pos_lanes:
+            pygame.draw.line(frame, (0, 0, 0), (0, lane + 25), (WIDTH, lane + 25))
+        
         all_cars.draw(frame)
         display.update()
         pygame.display.flip()
