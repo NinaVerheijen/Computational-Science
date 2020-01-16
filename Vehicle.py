@@ -81,7 +81,6 @@ class Vehicle(pygame.sprite.Sprite):
 
     def move(self):
         new_x = self.x + meter_to_pixel(self.speed)  # new place for the car
-        new_y = self.y + self.direction[1]
 
         self.rect.right = new_x  # move the car
         self.x = new_x  # update the car position

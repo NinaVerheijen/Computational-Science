@@ -20,7 +20,6 @@ clock.tick(60)
 # lanes = [lane1, lane2, lane3]
 random.seed(2)
 
-WIDTH = 4000 # 8 km?
 HEIGHT = 450
 road_length = 12
 CAPTION = 'Traffic Simulator'
@@ -38,8 +37,6 @@ def pixel_to_meter(pixels):
     dist = pixels*one_p
     return dist
 
-
-
 def traffic():
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
@@ -52,22 +49,16 @@ def traffic():
     road.delete_lane(all_cars)
     # print(road.lanes)
 
-
-
-
     while True:
         tijd.sleep(0.05)
         chance = random.uniform(0, 1)
 
-        if chance < 0.2:
-            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(road.pos_lanes), 30 + random.randrange(-10,10,2), [0.2,0])
             all_cars.add(car)
 
             # put car in the right lane and keep track of which lane the car is
             for number in range(len(road.pos_lanes)):
                 if car.y == road.pos_lanes[number]:
                     road.lanes[number].append(car)
-                    # print(car.lane)
 
         for car in all_cars:
             for c in all_cars:
@@ -78,7 +69,6 @@ def traffic():
                     car.speed += car.comp_acc(gap, c.speed)
 
                     # prevent cars from going backwards.
-
                     if car.speed < 0:
                         car.speed = 0
                 # If there is no car in front of current car.
@@ -93,10 +83,6 @@ def traffic():
             if car.x > WIDTH:
                 all_cars.remove(car)
 
-        if len(road.lanes[-1]) >= 2:
-            road.delete_lane(all_cars)
-            road.add_lane()
-            road.add_lane()
 
         # quit pygame
 
