@@ -45,8 +45,10 @@ class Vehicle(pygame.sprite.Sprite):
        self.lane = lane / 50
        self.size = size
        self.switch = False
+       self.can_switch = False
        self.left_right = 0
        self.left_or_right = None
+       self.gap_want = 30
 
        # Fetch the rectangle object that has the dimensions of the image
        # Update the position of this object by setting the values of rect.x and rect.y
@@ -75,10 +77,10 @@ class Vehicle(pygame.sprite.Sprite):
         v_0 = max_speed
         v = self.speed
         d = 4
-        d_v = abs(v - lead_speed)
+        d_v = abs(v - lead_speed) #lead_speed = leading car speed
         a_free = a*(1-(v/v_0)**d)
-        a_int = a*((self.desired_gap(v, d_v) / s)**2)
-    
+        a_int = a*((self.desired_gap(v, d_v) / s)**2) # hoeveel de auto de gap wil van de auto voor hem
+
         acc =  a_free - a_int
         return acc
 
