@@ -89,7 +89,7 @@ def traffic():
                 elif car.left_or_right >= 0.5:
                     car.left_right = 1   
 
-                if car.left_right == 1:
+                if car.left_right == 1 or car.left_right == -1:
                     going_lane = road.pos_lanes[int(car.lane + car.left_right) - 1]
                     # print(car.lane, going_lane)
                     cars_x_positions = ([x_pos.x for x_pos in road.lanes[int(car.lane + car.left_right)-1]])
