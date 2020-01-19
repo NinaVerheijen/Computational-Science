@@ -12,12 +12,12 @@ class Road:
         # Initialize the starting lanes
         for number_lanes in range(lanes):
             self.lanes.append([])
-            self.pos_lanes.append(50 * (number_lanes+1))
+            self.pos_lanes.append(10 * (number_lanes+1) + 29)
 
     # Add new lane to the road
     def add_lane(self):
         self.lanes.append([])
-        self.pos_lanes.append(50 * (len(self.lanes)))
+        self.pos_lanes.append(10 * (len(self.lanes)))
 
     # Delete the last lane and delete all cars on that lane
     def delete_lane(self, all_cars):
