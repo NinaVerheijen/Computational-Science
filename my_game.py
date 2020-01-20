@@ -1,6 +1,7 @@
 # from .dir import Dir
 import pygame
 import sys
+import os
 import math as Math
 import random
 import bisect  
@@ -12,22 +13,31 @@ from Vehicle import Vehicle
 from road import Road
 
 # from Vehicle import Vehicle
+os.environ['SDL_VIDEO_WINDOW_POS'] = '0,0'
 
 pygame.init()
 
 clock = pygame.time.Clock()
 clock.tick(60)
 
+# background 2 or 3 lanes
+
+# background_image = pygame.image.load("2baans.png")
+background_image = pygame.image.load("3baans.png")
+
 # lanes = [lane1, lane2, lane3]
 random.seed(2)
 
-WIDTH = 1200 # 8 km?
-HEIGHT = 400
+WIDTH = 1920 # 8 km?
+HEIGHT = 100
 road_length = 12
-CAPTION = 'Traffic Simulator'
+# CAPTION = 'Traffic Simulator'
+pygame.display.set_caption('Traffic Simulator')
 
 max_speed = 130
  #130 km\h
+
+ 
 
 def meter_to_pixel(distance):
     # hoeveel pixels in meter
@@ -54,12 +64,17 @@ def traffic():
     # print(road.lanes)
 
     while True:
-        tijd.sleep(0.01)
+        tijd.sleep(0.000000000000000000000000000000000000000000000000000000001)
         chance = random.uniform(0, 1)
 
         if chance < 0.3:
-            car = Vehicle(chance, (255, 0, 0), [10, 10], 100, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
-            all_cars.add(car)
+            truck_chance = random.uniform(0,1)
+            if truck_chance < 0.75:
+                car = Vehicle(chance, (255, 0, 0), [24/2, 12/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
+                all_cars.add(car)
+            else:
+                truck = Vehicle(chance + 0.0000001, (0, 0, 255), [98/2, 14/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-5,5,1), [0.2,0])
+                all_cars.add(truck)
 
             # put car in the right lane and keep track of which lane the car is
             for number in range(len(road.pos_lanes)):
@@ -89,7 +104,7 @@ def traffic():
                 elif car.left_or_right >= 0.5:
                     car.left_right = 1   
 
-                if car.left_right == 1:
+                if car.left_right == 1 or car.left_right == -1:
                     going_lane = road.pos_lanes[int(car.lane + car.left_right) - 1]
                     # print(car.lane, going_lane)
                     cars_x_positions = ([x_pos.x for x_pos in road.lanes[int(car.lane + car.left_right)-1]])
@@ -178,15 +193,19 @@ def traffic():
                 pygame.quit()
                 exit()
 
-        frame.fill((255, 255, 255))
+        # frame.fill((255, 255, 255))
+        frame.blit(background_image, [0, 0])
 
         # Draw the lanes
-        pygame.draw.line(frame, (0, 0, 0), (0, road.pos_lanes[0] - 25), (WIDTH, road.pos_lanes[0] - 25))
-        for lane in road.pos_lanes:
-            pygame.draw.line(frame, (0, 0, 0), (0, lane + 25), (WIDTH, lane + 25))
+        # pygame.draw.line(frame, (0, 0, 0), (0, road.pos_lanes[0] - 10), (WIDTH, road.pos_lanes[0] - 10))
+        # for lane in road.pos_lanes:
+        #     pygame.draw.line(frame, (0, 0, 0), (0, lane + 10), (WIDTH, lane + 10))
         
         all_cars.draw(frame)
         display.update()
+
+
+        
         pygame.display.flip()
 
 
