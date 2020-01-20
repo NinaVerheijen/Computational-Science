@@ -68,11 +68,13 @@ def traffic():
         chance = random.uniform(0, 1)
 
         if chance < 0.3:
-            car = Vehicle(chance, (255, 0, 0), [24/2, 12/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
-            all_cars.add(car)
-
-            truck = Vehicle(chance, (0, 255, 0), [98/2, 14/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
-            all_cars.add(truck)
+            truck_chance = random.uniform(0,1)
+            if truck_chance < 0.75:
+                car = Vehicle(chance, (255, 0, 0), [24/2, 12/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
+                all_cars.add(car)
+            else:
+                truck = Vehicle(chance + 0.0000001, (0, 0, 255), [98/2, 14/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-5,5,1), [0.2,0])
+                all_cars.add(truck)
 
             # put car in the right lane and keep track of which lane the car is
             for number in range(len(road.pos_lanes)):
