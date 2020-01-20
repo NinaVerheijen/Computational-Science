@@ -7,7 +7,6 @@ from pygame import *
 from pygame.locals import *
 from pygame.sprite import *
 
-max_speed = 130 #130 km\h
 WIDTH = 1100 # 8 km?
 HEIGHT = 400
 road_length = 18
@@ -27,33 +26,37 @@ class Vehicle(pygame.sprite.Sprite):
     # Constructor. Pass in the color of the Vehicle,
     # and its x and y position
 
-    def __init__(self, ID, color, size, x, lane, speed, direction):
+    def __init__(self, ID, model, color, size, x, lane, speed, direction):
 
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
+        # Call the parent class (Sprite) constructor
+        pygame.sprite.Sprite.__init__(self)
 
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.
-       self.ID = ID
-       self.image = pygame.Surface(size)
-       self.image.fill(color)
-       self.speed  = speed
+        # Create an image of the block, and fill it with a color.
+        # This could also be an image loaded from the disk.
+        self.ID = ID
+        self.image = pygame.Surface(size)
+        self.image.fill(color)
+        self.speed  = speed
+        if model == 'truck':
+            self.max_speed = 90
+        else:
+            self.max_speed = 130
 
-       self.x = int(x)  # variable denoting x position of car
-       self.y = int(lane)
-       self.direction = direction
-       self.lane = lane / 50
-       self.size = size
-       self.switch = False
-       self.can_switch = False
-       self.left_right = 0
-       self.left_or_right = None
-       self.gap_want = 30
+        self.x = int(x)  # variable denoting x position of car
+        self.y = int(lane)
+        self.direction = direction
+        self.lane = lane / 50
+        self.size = size
+        self.switch = False
+        self.can_switch = False
+        self.left_right = 0
+        self.left_or_right = None
+        self.gap_want = 30
 
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect(center=(x,lane))
-       self.rect.size = (size[0] + 10, size[1])
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+        self.rect = self.image.get_rect(center=(x,lane))
+        self.rect.size = (size[0] + 10, size[1])
 
 
     def desired_gap(self, v, d_v):
@@ -74,7 +77,8 @@ class Vehicle(pygame.sprite.Sprite):
 
     def comp_acc(self, s, lead_speed):
         a = 0.3
-        v_0 = max_speed
+        
+        v_0 = self.max_speed
         v = self.speed
         d = 4
         d_v = abs(v - lead_speed) #lead_speed = leading car speed

@@ -34,9 +34,6 @@ road_length = 12
 # CAPTION = 'Traffic Simulator'
 pygame.display.set_caption('Traffic Simulator')
 
-max_speed = 130
- #130 km\h
-
  
 
 def meter_to_pixel(distance):
@@ -69,11 +66,12 @@ def traffic():
 
         if chance < 0.3:
             truck_chance = random.uniform(0,1)
-            if truck_chance < 0.75:
-                car = Vehicle(chance, (255, 0, 0), [24/2, 12/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
+            if truck_chance < 0.80:
+                car = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], -50, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
                 all_cars.add(car)
             else:
-                truck = Vehicle(chance + 0.0000001, (0, 0, 255), [98/2, 14/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-5,5,1), [0.2,0])
+                choice = random.choices(population = road.pos_lanes, weights = [0.02, 0.04, 0.1, 0.84])
+                truck = Vehicle(chance + 0.0000001, 'truck', (0, 0, 255), [98/2, 14/2], -50, choice[0], 10 + random.randrange(-5,5,1), [0.2,0])
                 all_cars.add(truck)
 
             # put car in the right lane and keep track of which lane the car is
