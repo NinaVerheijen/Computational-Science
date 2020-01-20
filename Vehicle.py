@@ -39,7 +39,9 @@ class Vehicle(pygame.sprite.Sprite):
         self.image.fill(color)
         self.speed  = speed
         self.model = model
+        
         if self.model == 'truck':
+
             self.max_speed = 90
         else:
             self.max_speed = 130
@@ -47,7 +49,7 @@ class Vehicle(pygame.sprite.Sprite):
         self.x = int(x)  # variable denoting x position of car
         self.y = int(lane)
         self.direction = direction
-        self.lane = lane / 50
+        self.lane = (lane-29) / 10 # 29/50
         self.size = size
         self.switch = False
         self.can_switch = False
