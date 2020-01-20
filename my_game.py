@@ -52,7 +52,6 @@ def pixel_to_meter(pixels):
 def compute_gap(follower, leader):
     follower_bumper = follower.x + (follower.size[0] / 2)
     leader_bumper = leader.x - (leader.size[0] / 2)
-    gap = leader_bumper - follower_bumper
     return pixel_to_meter(gap)
 
 def traffic():

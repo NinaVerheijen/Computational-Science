@@ -38,7 +38,8 @@ class Vehicle(pygame.sprite.Sprite):
         self.image = pygame.Surface(size)
         self.image.fill(color)
         self.speed  = speed
-        if model == 'truck':
+        self.model = model
+        if self.model == 'truck':
             self.max_speed = 90
         else:
             self.max_speed = 130
@@ -69,7 +70,7 @@ class Vehicle(pygame.sprite.Sprite):
         T is desired safety time -> 1.5 s
         s is current gap
         """
-        s_0 = 300  # minimum gap between cars
+        s_0 = self.gap_want  # minimum gap between cars
         a = 0.3
         b = 3
         T = 1.5
