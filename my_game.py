@@ -51,6 +51,13 @@ def pixel_to_meter(pixels):
     dist = pixels*one_p
     return dist
 
+# Returns gap from bumper to bumper in meters.
+def compute_gap(follower, leader):
+    follower_bumper = follower.x + (follower.size[0] / 2)
+    leader_bumper = leader.x - (leader.size[0] / 2)
+    gap = leader_bumper - follower_bumper
+    return pixel_to_meter(gap)
+
 def traffic():
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
@@ -64,15 +71,17 @@ def traffic():
     # print(road.lanes)
 
     while True:
+        tijd.sleep(0.05)
+        # tijd.sleep(0.000000000000000000000000000000000000000000000000000000001)
         chance = random.uniform(0, 1)
 
         if chance < 0.3:
             truck_chance = random.uniform(0,1)
             if truck_chance < 0.75:
-                car = Vehicle(chance, (255, 0, 0), [24/2, 12/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
+                car = Vehicle(chance, (255, 0, 0), [24/2, 12/2], 100, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2), [0.2,0])
                 all_cars.add(car)
             else:
-                truck = Vehicle(chance + 0.0000001, (0, 0, 255), [98/2, 14/2], 100, random.choice(road.pos_lanes), 50 + random.randrange(-5,5,1), [0.2,0])
+                truck = Vehicle(chance + 0.0000001, (0, 0, 255), [98/2, 14/2], 100, random.choice(road.pos_lanes), 80 + random.randrange(-5,5,1), [0.2,0])
                 all_cars.add(truck)
 
             # put car in the right lane and keep track of which lane the car is
@@ -130,7 +139,16 @@ def traffic():
 
                     # print(prev_car)
 
-                    if (prev_car is not None and next_car is not None) and abs((next_car.x - car.x)) > car.gap_want and abs((prev_car.x - car.x)) > car.gap_want:
+                    # if next_car is not None:
+                    #     print('front', compute_gap(car, next_car))
+                    # print('back', compute_gap(prev_car, car))
+                    # print('prev', prev_car.x)
+                    # print('car', car.x)
+                    # if next_car is not None:
+                    #     print('next', next_car.x)
+                    # print('----------------------------------------------------')
+                    
+                    if (prev_car is not None and next_car is not None) and compute_gap(car, next_car) > car.gap_want and compute_gap(prev_car, car) > car.gap_want:
                         car.can_switch = True
                         
 
@@ -155,7 +173,8 @@ def traffic():
                 # Only check cars that are in same lane and in front of car
                 if car.y == c.y and car.x < c.x:
                     # gap in lane tussen volgende auto in x
-                    gap = pixel_to_meter(c.x - car.x)
+
+                    gap = compute_gap(car, c)
                     car.speed += car.comp_acc(gap, c.speed)
 
                     # prevent cars from going backwards.
