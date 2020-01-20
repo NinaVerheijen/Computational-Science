@@ -64,7 +64,6 @@ def traffic():
     # print(road.lanes)
 
     while True:
-        tijd.sleep(0.000000000000000000000000000000000000000000000000000000001)
         chance = random.uniform(0, 1)
 
         if chance < 0.3:
