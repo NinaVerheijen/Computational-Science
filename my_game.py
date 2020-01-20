@@ -52,6 +52,7 @@ def pixel_to_meter(pixels):
 def compute_gap(follower, leader):
     follower_bumper = follower.x + (follower.size[0] / 2)
     leader_bumper = leader.x - (leader.size[0] / 2)
+    gap = abs(leader_bumper - follower_bumper)
     return pixel_to_meter(gap)
 
 def traffic():
@@ -164,7 +165,10 @@ def traffic():
                 if car.y in road.pos_lanes:
                     car.lane = car.y / 50
                     car.switch = False
-                    car.image.fill((255,0,0))
+                    if car.model == 'car':
+                        car.image.fill((255,0,0))
+                    else:
+                        car.image.fill((0, 0, 255))
 
             for c in all_cars:
 
@@ -173,6 +177,8 @@ def traffic():
                     # gap in lane tussen volgende auto in x
 
                     gap = compute_gap(car, c)
+                    print(car.x, c.x)
+                    print(gap)
                     car.speed += car.comp_acc(gap, c.speed)
 
                     # prevent cars from going backwards.
