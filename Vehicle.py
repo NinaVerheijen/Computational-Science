@@ -14,17 +14,24 @@ road_length = 18
 def meter_to_pixel(distance):
     one_m = WIDTH/(road_length * 1000)
     dist = distance*one_m
+
+    # dist = distance*3
+
     return dist
 
 def pixel_to_meter(pixels):
     one_p = (road_length * 1000)/WIDTH
     dist = pixels*one_p
+
+    # dist = pixels/3
+
     return dist
 
 class Vehicle(pygame.sprite.Sprite):
 
     # Constructor. Pass in the color of the Vehicle,
     # and its x and y position
+
 
     def __init__(self, ID, model, color, size, x, lane, speed, direction):
 
@@ -39,10 +46,16 @@ class Vehicle(pygame.sprite.Sprite):
         self.lane = (lane-29) / 10 
         self.speed  = speed * (1 - self.lane/100*10)
         self.model = model
-        if model == 'truck':
+        
+        if self.model == 'truck':
+
             self.max_speed = 90
+            # self.gap_want = 80
+
         else:
             self.max_speed = 130
+            # self.gap_want = 50
+
 
         self.x = int(x)  # variable denoting x position of car
         self.y = int(lane)
@@ -50,9 +63,9 @@ class Vehicle(pygame.sprite.Sprite):
         self.size = size
         self.switch = False
         self.can_switch = False
-        self.left_right = 0
+        self.left_right = None
         self.left_or_right = None
-        self.gap_want = 30
+        self.gap_want = pixel_to_meter(49)
 
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y
@@ -69,10 +82,10 @@ class Vehicle(pygame.sprite.Sprite):
         T is desired safety time -> 1.5 s
         s is current gap
         """
-        s_0 = 300  # minimum gap between cars
+        s_0 = self.gap_want  # minimum gap between cars
         a = 0.3
         b = 3
-        T = 1.5                   
+        T = 1.5
         des_gap = s_0 + max(0, v*T + ((v*d_v)/ (2*Math.sqrt(a*b))))
         return des_gap
 
@@ -80,6 +93,7 @@ class Vehicle(pygame.sprite.Sprite):
         a = 0.3
         
         v_0 = self.max_speed * (1 - self.lane/100*5)
+
         v = self.speed
         d = 4
         d_v = abs(v - lead_speed) #lead_speed = leading car speed
@@ -97,4 +111,3 @@ class Vehicle(pygame.sprite.Sprite):
         self.x = new_x  # update the car position
         self.rect.bottom = new_y  # move the car
         self.y = new_y
-

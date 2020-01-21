@@ -4,7 +4,7 @@ import sys
 import os
 import math as Math
 import random
-import bisect  
+import bisect
 import time as tijd
 from pygame import *
 from pygame.locals import *
@@ -26,7 +26,7 @@ clock.tick(60)
 background_image = pygame.image.load("3baans.png")
 
 # lanes = [lane1, lane2, lane3]
-random.seed(2)
+random.seed(3)
 
 WIDTH = 1920 # 8 km?
 HEIGHT = 100
@@ -34,18 +34,24 @@ road_length = 12
 # CAPTION = 'Traffic Simulator'
 pygame.display.set_caption('Traffic Simulator')
 
- 
+
 
 def meter_to_pixel(distance):
     # hoeveel pixels in meter
     one_m = WIDTH/(road_length * 1000)
-    dist = distance*one_m
+    dist = distance* one_m
+
+
+    # dist = distance*3
     return dist
 
 def pixel_to_meter(pixels):
     # meters in een pixel zitten
     one_p = (road_length * 1000)/WIDTH
-    dist = pixels*one_p
+    dist = one_p*pixels
+
+
+    # dist = pixels/3
     return dist
 
 def vehicle_spawn(road, all_cars):
@@ -108,6 +114,32 @@ def lane_switching(car, road, all_cars):
         if (prev_car is not None and next_car is not None) and abs((next_car.x - car.x)) > car.gap_want and abs((prev_car.x - car.x)) > car.gap_want:
             car.can_switch = True
 
+# Returns gap from bumper to bumper in meters.
+def compute_gap(follower, leader):
+    follower_bumper = follower.x + (follower.size[0] / 2)
+    leader_bumper = leader.x - (leader.size[0] / 2)
+    # if follower.model == 'truck':
+        # print('follower', follower.x, follower_bumper)
+    if leader.model == 'truck':
+        gap = leader_bumper - follower_bumper - 20
+    else:
+        # print('leader', leader.x, leader_bumper)
+        gap = leader_bumper - follower_bumper
+    # print('gap_before', gap)
+
+
+
+    # if follower.model == 'truck' or leader.model == 'truck':
+    #     gap = leader.x - follower.x + 10
+    # if follower.model == 'truck' and leader.model == 'truck':
+    #     gap = leader.x - follower.x + 20
+    # else:
+    #     gap = leader.x - follower.x
+    if gap < 0:
+        gap = 0.00001
+    return pixel_to_meter(gap)
+
+
 def traffic():
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
@@ -121,10 +153,12 @@ def traffic():
     # print(road.lanes)
 
     while True:
+
         tijd.sleep(0.000005)
 
 
         all_cars = vehicle_spawn(road, all_cars)
+
 
         for car in all_cars:
             change_lanes = random.uniform(0, 1)
@@ -149,24 +183,40 @@ def traffic():
 
                         
 
+
                 # Y changing from the car to new lane
                 if car.can_switch == True:
                     car.y += car.left_right
                 elif car.can_switch == False and car.y in road.pos_lanes:
                     car.switch = False
-                    
+
                 # lane switch complete
                 if car.y in road.pos_lanes:
                     car.lane = (car.y-29) / 10
                     car.switch = False
-                    car.image.fill((255,0,0))
+                    if car.model == 'car':
+                        car.image.fill((255,0,0))
+                    else:
+                        car.image.fill((0, 0, 255))
 
             for c in all_cars:
                 # Only check cars that are in same lane and in front of car
                 if car.y == c.y and car.x < c.x:
                     # gap in lane tussen volgende auto in x
-                    gap = pixel_to_meter(c.x - car.x)
+
+                    gap = compute_gap(car, c)
+                    # print(car.x, c.x)
+                    # print(meter_to_pixel(gap))
+                    # print(gap)
+                    # print('------------')
+                    acc = car.comp_acc(gap, c.speed)
+                    # if acc < 0:
+                        # print(car.x, c.x)
+                        # print('gap', gap)
+                        # print('acc', acc)
+                        # print('-----------------------')
                     car.speed += car.comp_acc(gap, c.speed)
+                    # print(car.speed)
 
                     # prevent cars from going backwards.
                     if car.speed < 0:
@@ -175,17 +225,17 @@ def traffic():
                 # If there is no car in front of current car.
                 else:
                     gap = 1000000
-                    car.speed += car.comp_acc(gap, car.speed)
+                    car.speed += car.comp_acc(gap, car.max_speed)
 
                     if car.speed < 0:
                         car.speed = 0
 
-                
+
             car.move()
             if car.x > WIDTH:
                 # print(car.speed)
                 all_cars.remove(car)
-        # tijd.sleep(1)
+
         # quit pygame
         for event in pygame.event.get():
             if event.type == KEYDOWN:
@@ -195,6 +245,7 @@ def traffic():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+
 
 
         # make pygame
