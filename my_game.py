@@ -95,6 +95,7 @@ def lane_switching(car, road, all_cars):
 
         next_car = None
         prev_car = None
+
         # Find the previous and the next car in the switching lane
         for check_car in all_cars:
             if index is not len(cars_x_positions):
@@ -105,8 +106,16 @@ def lane_switching(car, road, all_cars):
                     prev_car = check_car
 
         # The gap is big enough
-        if (prev_car is not None and next_car is not None) and abs((next_car.x - car.x)) > car.gap_want and abs((prev_car.x - car.x)) > car.gap_want:
-            car.can_switch = True
+        if (prev_car is not None and next_car is not None):
+            print('front', compute_gap(car, next_car))
+            print('back', compute_gap(prev_car, car))
+            print('wanted-gap', car.gap_want)
+            if compute_gap(car, next_car) > car.gap_want and compute_gap(prev_car, car) > car.gap_want:            
+                car.can_switch = True
+                print('hi')
+            print('--------------------')
+
+
 
 # Returns gap from bumper to bumper in meters.
 def compute_gap(follower, leader):
@@ -135,11 +144,9 @@ def traffic():
 
     while True:
 
-        tijd.sleep(0.000005)
-
+        tijd.sleep(0.05)
 
         all_cars = vehicle_spawn(road, all_cars)
-
 
         for car in all_cars:
             change_lanes = random.uniform(0, 1)
@@ -154,12 +161,8 @@ def traffic():
             # print('----------------------------------------')
             # print()
 
-
-
             # car, road, all_cars
             if car.switch is True:
-
-
                 lane_switching(car, road, all_cars)
 
                 # Y changing from the car to new lane

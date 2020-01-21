@@ -65,7 +65,7 @@ class Vehicle(pygame.sprite.Sprite):
         self.can_switch = False
         self.left_right = None
         self.left_or_right = None
-        self.gap_want = pixel_to_meter(49)
+        self.gap_want = 80
 
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y
