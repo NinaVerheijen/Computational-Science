@@ -69,10 +69,9 @@ def traffic():
             if truck_chance < 0.80:
                 car = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], -50, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
                 all_cars.add(car)
-                print(car.lane)
             else:
                 choice = random.choices(population = road.pos_lanes, weights = [0.02, 0.04, 0.1, 0.84])
-                truck = Vehicle(chance + 0.0000001, 'truck', (0, 0, 255), [98/2, 14/2], -50, choice[0], 10 + random.randrange(-5,5,1), [0.2,0])
+                truck = Vehicle(chance, 'truck', (0, 0, 255), [98/2, 14/2], -50, choice[0], 10 + random.randrange(-5,5,1), [0.2,0])
                 all_cars.add(truck)
 
             # put car in the right lane and keep track of which lane the car is
@@ -105,7 +104,6 @@ def traffic():
 
                 # get the x positions of cars in the lane where the car is going to
                 if car.left_right == 1 or car.left_right == -1:
-                    print('going lane: ',int(car.lane + car.left_right))
                     going_lane = road.pos_lanes[int(car.lane + car.left_right) - 1]
                     cars_x_positions = ([x_pos.x for x_pos in road.lanes[int(car.lane + car.left_right)-1]])
                     cars_x_positions.reverse()
@@ -163,6 +161,7 @@ def traffic():
                 
             car.move()
             if car.x > WIDTH:
+                print(car.speed)
                 all_cars.remove(car)
 
         # quit pygame
