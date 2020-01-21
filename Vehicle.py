@@ -14,11 +14,17 @@ road_length = 18
 def meter_to_pixel(distance):
     one_m = WIDTH/(road_length * 1000)
     dist = distance*one_m
+
+    # dist = distance*3
+
     return dist
 
 def pixel_to_meter(pixels):
     one_p = (road_length * 1000)/WIDTH
     dist = pixels*one_p
+
+    # dist = pixels/3
+
     return dist
 
 class Vehicle(pygame.sprite.Sprite):
@@ -43,8 +49,12 @@ class Vehicle(pygame.sprite.Sprite):
         if self.model == 'truck':
 
             self.max_speed = 90
+            # self.gap_want = 80
+
         else:
             self.max_speed = 130
+            # self.gap_want = 50
+
 
         self.x = int(x)  # variable denoting x position of car
         self.y = int(lane)
@@ -53,9 +63,9 @@ class Vehicle(pygame.sprite.Sprite):
         self.size = size
         self.switch = False
         self.can_switch = False
-        self.left_right = 0
+        self.left_right = None
         self.left_or_right = None
-        self.gap_want = 30
+        self.gap_want = pixel_to_meter(49)
 
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y

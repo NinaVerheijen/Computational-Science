@@ -26,7 +26,7 @@ clock.tick(60)
 background_image = pygame.image.load("3baans.png")
 
 # lanes = [lane1, lane2, lane3]
-random.seed(2)
+random.seed(3)
 
 WIDTH = 1920 # 8 km?
 HEIGHT = 100
@@ -39,20 +39,44 @@ pygame.display.set_caption('Traffic Simulator')
 def meter_to_pixel(distance):
     # hoeveel pixels in meter
     one_m = WIDTH/(road_length * 1000)
-    dist = distance*one_m
+    dist = distance* one_m
+
+
+    # dist = distance*3
     return dist
 
 def pixel_to_meter(pixels):
     # meters in een pixel zitten
     one_p = (road_length * 1000)/WIDTH
-    dist = pixels*one_p
+    dist = one_p*pixels
+
+
+    # dist = pixels/3
     return dist
 
 # Returns gap from bumper to bumper in meters.
 def compute_gap(follower, leader):
     follower_bumper = follower.x + (follower.size[0] / 2)
     leader_bumper = leader.x - (leader.size[0] / 2)
-    gap = abs(leader_bumper - follower_bumper)
+    # if follower.model == 'truck':
+        # print('follower', follower.x, follower_bumper)
+    if leader.model == 'truck':
+        gap = leader_bumper - follower_bumper - 20
+    else:
+        # print('leader', leader.x, leader_bumper)
+        gap = leader_bumper - follower_bumper
+    # print('gap_before', gap)
+
+
+
+    # if follower.model == 'truck' or leader.model == 'truck':
+    #     gap = leader.x - follower.x + 10
+    # if follower.model == 'truck' and leader.model == 'truck':
+    #     gap = leader.x - follower.x + 20
+    # else:
+    #     gap = leader.x - follower.x
+    if gap < 0:
+        gap = 0.00001
     return pixel_to_meter(gap)
 
 def traffic():
@@ -72,16 +96,15 @@ def traffic():
         # tijd.sleep(0.000000000000000000000000000000000000000000000000000000001)
         chance = random.uniform(0, 1)
 
-        if chance < 0.3:
+        if chance < 0.2:
             truck_chance = random.uniform(0,1)
 
             if truck_chance < 0.80:
-                car = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], -50, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
+                car = Vehicle(chance, 'car', (255, 0, 0), [12, 6], -50, random.choice(road.pos_lanes), 90 + random.randrange(-10,10,2), [0.2,0])
                 all_cars.add(car)
-                print(car.lane)
             else:
                 choice = random.choices(population = road.pos_lanes, weights = [0.02, 0.04, 0.1, 0.84])
-                truck = Vehicle(chance + 0.0000001, 'truck', (0, 0, 255), [98/2, 14/2], -50, choice[0], 10 + random.randrange(-5,5,1), [0.2,0])
+                truck = Vehicle(chance + 0.0000001, 'truck', (0, 0, 255), [49, 7], -50, choice[0], 70 + random.randrange(-5,5,1), [0.2,0])
                 all_cars.add(truck)
 
             # put car in the right lane and keep track of which lane the car is
@@ -115,7 +138,6 @@ def traffic():
 
                 # get the x positions of cars in the lane where the car is going to
                 if car.left_right == 1 or car.left_right == -1:
-                    print('going lane: ',int(car.lane + car.left_right))
                     going_lane = road.pos_lanes[int(car.lane + car.left_right) - 1]
                     cars_x_positions = ([x_pos.x for x_pos in road.lanes[int(car.lane + car.left_right)-1]])
                     cars_x_positions.reverse()
@@ -168,9 +190,18 @@ def traffic():
                     # gap in lane tussen volgende auto in x
 
                     gap = compute_gap(car, c)
-                    print(car.x, c.x)
-                    print(gap)
+                    # print(car.x, c.x)
+                    # print(meter_to_pixel(gap))
+                    # print(gap)
+                    # print('------------')
+                    acc = car.comp_acc(gap, c.speed)
+                    # if acc < 0:
+                        # print(car.x, c.x)
+                        # print('gap', gap)
+                        # print('acc', acc)
+                        # print('-----------------------')
                     car.speed += car.comp_acc(gap, c.speed)
+                    # print(car.speed)
 
                     # prevent cars from going backwards.
                     if car.speed < 0:
@@ -179,7 +210,7 @@ def traffic():
                 # If there is no car in front of current car.
                 else:
                     gap = 1000000
-                    car.speed += car.comp_acc(gap, car.speed)
+                    car.speed += car.comp_acc(gap, car.max_speed)
 
                     if car.speed < 0:
                         car.speed = 0
