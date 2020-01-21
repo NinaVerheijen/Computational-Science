@@ -91,8 +91,9 @@ class Vehicle(pygame.sprite.Sprite):
 
     def comp_acc(self, s, lead_speed):
         a = 0.3
+        
+        v_0 = self.max_speed * (1 - self.lane/100*5)
 
-        v_0 = self.max_speed
         v = self.speed
         d = 4
         d_v = abs(v - lead_speed) #lead_speed = leading car speed
