@@ -104,7 +104,8 @@ def traffic():
                 all_cars.add(car)
             else:
                 choice = random.choices(population = road.pos_lanes, weights = [0.02, 0.04, 0.1, 0.84])
-                truck = Vehicle(chance + 0.0000001, 'truck', (0, 0, 255), [49, 7], -50, choice[0], 70 + random.randrange(-5,5,1), [0.2,0])
+                truck = Vehicle(chance, 'truck', (0, 0, 255), [49, 7], -50, choice[0], 70 + random.randrange(-5,5,1), [0.2,0])
+
                 all_cars.add(truck)
 
             # put car in the right lane and keep track of which lane the car is
@@ -218,6 +219,7 @@ def traffic():
 
             car.move()
             if car.x > WIDTH:
+                print(car.speed)
                 all_cars.remove(car)
 
 
