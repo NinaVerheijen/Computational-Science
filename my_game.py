@@ -71,7 +71,6 @@ def vehicle_spawn(road, all_cars):
 
 def lane_switching(car, road, all_cars):
 
-    car.image.fill((0,255,0))
     if car.y in road.pos_lanes:
         car.left_or_right = random.uniform(0, 1)
         # exception if most left lane or most right lane
@@ -117,6 +116,8 @@ def lane_switching(car, road, all_cars):
             # print('wanted-gap', car.gap_want)
             if compute_gap(car, next_car) > car.gap_want and compute_gap(prev_car, car) > car.gap_want:
                 car.can_switch = True
+                car.image.fill((0, 255, 0))
+
                 # print('not removed', car.x)
                 if car in road.lanes[int(car.lane-1)]:
                     road.lanes[int(car.lane - 1)].remove(car)
@@ -166,7 +167,7 @@ def traffic():
     # print(road.lanes)
 
     while True:
-        tijd.sleep(0.05)
+        tijd.sleep(0.005)
 
         all_cars = vehicle_spawn(road, all_cars)
 
@@ -196,12 +197,13 @@ def traffic():
                     if car.y in road.pos_lanes:
                         car.lane = (car.y-29) / 10
                         road.lanes[int(car.lane-1)].insert(index, car)
-                        xs = [x.x for x in road.lanes[int(car.lane-1)]]
+                        # xs = [x.x for x in road.lanes[int(car.lane-1)]]
                         # print(xs)
-                        if sorted(xs) is not xs:
-                            print(xs)
+                        # if sorted(xs) is not xs:
+                        #     print(xs)
                         car.switch = False
                         car.can_switch = False
+
                         if car.model == 'car':
                             car.image.fill((255,0,0))
                         else:
