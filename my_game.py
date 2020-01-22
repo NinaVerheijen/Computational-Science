@@ -55,17 +55,19 @@ def vehicle_spawn(road, all_cars):
         truck_chance = random.uniform(0,1)
         if truck_chance < 0.80:
             vehicle = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 80 + random.randrange(-10,10,2), [0.2,0])
-            all_cars.add(vehicle)
+            
         else:
             choice = random.choices(population = road.pos_lanes, weights = [0.02, 0.04, 0.1, 0.84])
             vehicle = Vehicle(chance, 'truck', (0, 0, 255), [98/2, 14/2], 10, choice[0], 50 + random.randrange(-5,5,1), [0.2,0])
+
+        if not spritecollideany(vehicle, all_cars):
+            
             all_cars.add(vehicle)
 
-        # put car in the right lane and keep track of which lane the car is
-        for number in range(len(road.pos_lanes)):
-            if vehicle.y == road.pos_lanes[number]:
-                road.lanes[number].insert(0, vehicle)
-                # road.lanes[number].append(vehicle)
+            # put car in the right lane and keep track of which lane the car is
+            for number in range(len(road.pos_lanes)):
+                if vehicle.y == road.pos_lanes[number]:
+                    road.lanes[number].insert(0, vehicle)
 
     return all_cars
 
@@ -111,9 +113,6 @@ def lane_switching(car, road, all_cars):
         # The gap is big enough
         if (prev_car is not None and next_car is not None):
 
-            # print('front', compute_gap(car, next_car))
-            # print('back', compute_gap(prev_car, car))
-            # print('wanted-gap', car.gap_want)
             if compute_gap(car, next_car) > car.gap_want and compute_gap(prev_car, car) > car.gap_want:
                 car.can_switch = True
                 car.image.fill((0, 255, 0))
@@ -174,7 +173,7 @@ def traffic():
         for car in all_cars:
             change_lanes = random.uniform(0, 1)
 
-            if change_lanes < 0.005:
+            if change_lanes < 0.0005:
                 car.switch = True
 
 
@@ -223,22 +222,6 @@ def traffic():
 
                 if car.speed < 0:
                     car.speed = 0
-
-            # for c in all_cars:
-            #     # Only check cars that are in same lane and in front of car
-            #     if car.y == c.y and car.x < c.x:
-
-            #         # gap in lane tussen volgende auto in x
-            #         gap = compute_gap(car, c)
-            #         acc = car.comp_acc(gap, c.speed)
-            #         car.speed += acc
-
-            #         # prevent cars from going backwards.
-            #         if car.speed < 0:
-            #             car.speed = 0
-
-            #     # If there is no car in front of current car.
-            #     else:
 
 
 
