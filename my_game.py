@@ -107,13 +107,9 @@ def lane_switching(car, road, all_cars):
 
         # The gap is big enough
         if (prev_car is not None and next_car is not None):
-            print('front', compute_gap(car, next_car))
-            print('back', compute_gap(prev_car, car))
-            print('wanted-gap', car.gap_want)
             if compute_gap(car, next_car) > car.gap_want and compute_gap(prev_car, car) > car.gap_want:            
                 car.can_switch = True
-                print('hi')
-            print('--------------------')
+                
 
 
 
@@ -143,25 +139,15 @@ def traffic():
     # print(road.lanes)
 
     while True:
-
         tijd.sleep(0.05)
-
         all_cars = vehicle_spawn(road, all_cars)
-
+        
         for car in all_cars:
             change_lanes = random.uniform(0, 1)
 
             if change_lanes < 0.005:
                 car.switch = True
 
-            # print(road.lanes)
-            # print(road.lanes[1][0].speed)
-            # find_index = road.lanes[int(car.lane - 1)].index(car)
-            # print(road.lanes[1][find_index].speed)
-            # print('----------------------------------------')
-            # print()
-
-            # car, road, all_cars
             if car.switch is True:
                 lane_switching(car, road, all_cars)
 
