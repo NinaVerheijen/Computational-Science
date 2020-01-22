@@ -48,13 +48,9 @@ class Vehicle(pygame.sprite.Sprite):
         self.model = model
         
         if self.model == 'truck':
-
             self.max_speed = 90
-            # self.gap_want = 80
-
         else:
             self.max_speed = 130
-            # self.gap_want = 50
 
 
         self.x = int(x)  # variable denoting x position of car
