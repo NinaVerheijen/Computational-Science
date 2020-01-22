@@ -51,20 +51,21 @@ def pixel_to_meter(pixels):
 def vehicle_spawn(road, all_cars):
     chance = random.uniform(0, 1)
 
-    if chance < 0.3:
+    if chance < 0.1:
         truck_chance = random.uniform(0,1)
         if truck_chance < 0.80:
-            vehicle = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], -30, random.choice(road.pos_lanes), 50 + random.randrange(-10,10,2), [0.2,0])
+            vehicle = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 80 + random.randrange(-10,10,2), [0.2,0])
             all_cars.add(vehicle)
         else:
             choice = random.choices(population = road.pos_lanes, weights = [0.02, 0.04, 0.1, 0.84])
-            vehicle = Vehicle(chance, 'truck', (0, 0, 255), [98/2, 14/2], -30, choice[0], 10 + random.randrange(-5,5,1), [0.2,0])
+            vehicle = Vehicle(chance, 'truck', (0, 0, 255), [98/2, 14/2], 10, choice[0], 50 + random.randrange(-5,5,1), [0.2,0])
             all_cars.add(vehicle)
 
         # put car in the right lane and keep track of which lane the car is
         for number in range(len(road.pos_lanes)):
             if vehicle.y == road.pos_lanes[number]:
-                road.lanes[number].append(vehicle)
+                road.lanes[number].insert(0, vehicle)
+                # road.lanes[number].append(vehicle)
 
     return all_cars
 
@@ -90,27 +91,38 @@ def lane_switching(car, road, all_cars):
     if car.left_right == 1 or car.left_right == -1:
         # going_lane = road.pos_lanes[int(car.lane + car.left_right) - 1]
         cars_x_positions = ([x_pos.x for x_pos in road.lanes[int(car.lane + car.left_right)-1]])
-        cars_x_positions.reverse()
+        # cars_x_positions.reverse()
         index = bisect.bisect(cars_x_positions, car.x)
-
+        # print(index, len(cars_x_positions))
         next_car = None
         prev_car = None
 
         # Find the previous and the next car in the switching lane
         for check_car in all_cars:
+
             if index is not len(cars_x_positions):
                 if check_car.x == cars_x_positions[index]:
                     next_car = check_car
+
             if index is not 0:
                 if check_car.x == cars_x_positions[index - 1]:
                     prev_car = check_car
+            # print(prev_car, next_car)
 
         # The gap is big enough
         if (prev_car is not None and next_car is not None):
-            if compute_gap(car, next_car) > car.gap_want and compute_gap(prev_car, car) > car.gap_want:            
-                car.can_switch = True
-                
 
+            # print('front', compute_gap(car, next_car))
+            # print('back', compute_gap(prev_car, car))
+            # print('wanted-gap', car.gap_want)
+            if compute_gap(car, next_car) > car.gap_want and compute_gap(prev_car, car) > car.gap_want:
+                car.can_switch = True
+                # print('not removed', car.x)
+                if car in road.lanes[int(car.lane-1)]:
+                    road.lanes[int(car.lane - 1)].remove(car)
+                # print('removed', car.x)
+                # print('-------------------')
+        return(index)
 
 
 # Returns gap from bumper to bumper in meters.
@@ -125,6 +137,21 @@ def compute_gap(follower, leader):
         gap = 0.00001
     return pixel_to_meter(gap)
 
+def neighbour_cars(road, car):
+    next_car = None
+    prev_car = None
+
+    if car.can_switch == False:
+        find_index = road.lanes[int(car.lane - 1)].index(car)
+
+        if find_index + 1 is not len(road.lanes[int(car.lane - 1)]):
+            # print(car.x, 'Next car x', road.lanes[int(car.lane - 1)][find_index+1].x)
+            next_car = road.lanes[int(car.lane - 1)][find_index+1]
+        if find_index is not 0:
+            # print(car.x, 'Prev car x', road.lanes[int(car.lane - 1)][find_index-1].x)
+            prev_car = road.lanes[int(car.lane - 1)][find_index-1]
+
+    return next_car, prev_car
 
 def traffic():
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
@@ -140,57 +167,84 @@ def traffic():
 
     while True:
         tijd.sleep(0.05)
+
         all_cars = vehicle_spawn(road, all_cars)
-        
+
         for car in all_cars:
             change_lanes = random.uniform(0, 1)
 
             if change_lanes < 0.005:
                 car.switch = True
 
+
+            next_car, prev_car = neighbour_cars(road, car)
+
             if car.switch is True:
-                lane_switching(car, road, all_cars)
+                index = lane_switching(car, road, all_cars)
+
+                # print(car.can_switch)
 
                 # Y changing from the car to new lane
                 if car.can_switch == True:
                     car.y += car.left_right
-                elif car.can_switch == False and car.y in road.pos_lanes:
-                    car.switch = False
+
+                # elif car.can_switch == False and car.y in road.pos_lanes:
+                #     car.switch = False
 
                 # lane switch complete
-                if car.y in road.pos_lanes:
-                    car.lane = (car.y-29) / 10
-                    car.switch = False
-                    if car.model == 'car':
-                        car.image.fill((255,0,0))
-                    else:
-                        car.image.fill((0, 0, 255))
+                if car.can_switch == True:
+                    if car.y in road.pos_lanes:
+                        car.lane = (car.y-29) / 10
+                        road.lanes[int(car.lane-1)].insert(index, car)
+                        xs = [x.x for x in road.lanes[int(car.lane-1)]]
+                        # print(xs)
+                        if sorted(xs) is not xs:
+                            print(xs)
+                        car.switch = False
+                        car.can_switch = False
+                        if car.model == 'car':
+                            car.image.fill((255,0,0))
+                        else:
+                            car.image.fill((0, 0, 255))
 
-            for c in all_cars:
-                # Only check cars that are in same lane and in front of car
-                if car.y == c.y and car.x < c.x:
+            if next_car is not None:
+                gap = compute_gap(car, next_car)
+                acc = car.comp_acc(gap, next_car.speed)
+                car.speed += acc
 
-                    # gap in lane tussen volgende auto in x
-                    gap = compute_gap(car, c)
-                    acc = car.comp_acc(gap, c.speed)
-                    car.speed += acc
+                # prevent cars from going backwards.
+                if car.speed < 0:
+                    car.speed = 0
+            else:
+                gap = 10000
+                car.speed += car.comp_acc(gap, car.max_speed)
 
-                    # prevent cars from going backwards.
-                    if car.speed < 0:
-                        car.speed = 0
+                if car.speed < 0:
+                    car.speed = 0
 
-                # If there is no car in front of current car.
-                else:
-                    gap = 10000
-                    car.speed += car.comp_acc(gap, car.max_speed)
+            # for c in all_cars:
+            #     # Only check cars that are in same lane and in front of car
+            #     if car.y == c.y and car.x < c.x:
 
-                    if car.speed < 0:
-                        car.speed = 0
+            #         # gap in lane tussen volgende auto in x
+            #         gap = compute_gap(car, c)
+            #         acc = car.comp_acc(gap, c.speed)
+            #         car.speed += acc
+
+            #         # prevent cars from going backwards.
+            #         if car.speed < 0:
+            #             car.speed = 0
+
+            #     # If there is no car in front of current car.
+            #     else:
+
 
 
             car.move()
             if car.x > WIDTH:
+                road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
+
 
         # quit pygame
         for event in pygame.event.get():
