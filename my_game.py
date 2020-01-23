@@ -54,11 +54,11 @@ def vehicle_spawn(road, all_cars):
     if chance < 0.1:
         truck_chance = random.uniform(0,1)
         if truck_chance < 0.80:
-            vehicle = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 80 + random.randrange(-10,10,2), [0.2,0])
+            vehicle = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2), [0.2,0])
             
         else:
-            choice = random.choices(population = road.pos_lanes, weights = [0.02, 0.04, 0.1, 0.84])
-            vehicle = Vehicle(chance, 'truck', (0, 0, 255), [98/2, 14/2], 10, choice[0], 50 + random.randrange(-5,5,1), [0.2,0])
+            choice = random.choices(population = road.pos_lanes, weights = [0, 0.01, 0.1, 0.85])
+            vehicle = Vehicle(chance, 'truck', (0, 0, 255), [98/2, 14/2], 10, choice[0], 80 + random.randrange(-5,5,1), [0.2,0])
 
         if not spritecollideany(vehicle, all_cars):
             
@@ -173,7 +173,7 @@ def traffic():
         for car in all_cars:
             change_lanes = random.uniform(0, 1)
 
-            if change_lanes < 0.0005:
+            if change_lanes < 0.00005:
                 car.switch = True
 
 
@@ -227,6 +227,7 @@ def traffic():
 
             car.move()
             if car.x > WIDTH:
+                print('car has exited', car.speed, car.max_speed)
                 road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
 
