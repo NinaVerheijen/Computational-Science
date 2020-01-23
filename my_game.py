@@ -6,6 +6,7 @@ import math as Math
 import random
 import bisect
 import time as tijd
+import matplotlib.pyplot as plt
 from pygame import *
 from pygame.locals import *
 from pygame.sprite import *
@@ -15,10 +16,10 @@ from road import Road
 # from Vehicle import Vehicle
 os.environ['SDL_VIDEO_WINDOW_POS'] = '0,0'
 
-pygame.init()
+# pygame.init()
 
-clock = pygame.time.Clock()
-clock.tick(60)
+# clock = pygame.time.Clock()
+# clock.tick(60)
 
 # background 2 or 3 lanes
 
@@ -51,18 +52,19 @@ def pixel_to_meter(pixels):
     dist = one_p*pixels
     return dist
 
-def vehicle_spawn(road, all_cars):
+
+def vehicle_spawn(road, all_cars, max_speed):
     chance = random.uniform(0, 1)
 
     if chance < 0.3:
         truck_chance = random.uniform(0,1)
         if truck_chance < 0.80:
-            vehicle = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2), [0.2,0])
+            vehicle = Vehicle(chance, 'car', max_speed, (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2), [0.2,0])
             
 
         else:
             choice = random.choices(population = road.pos_lanes, weights = [0, 0.01, 0.1, 0.85])
-            vehicle = Vehicle(chance, 'truck', (0, 0, 255), [98/2, 14/2], 10, choice[0], 80 + random.randrange(-5,5,1), [0.2,0])
+            vehicle = Vehicle(chance, 'truck', max_speed, (0, 0, 255), [98/2, 14/2], 10, choice[0], 80 + random.randrange(-5,5,1), [0.2,0])
 
         if not spritecollideany(vehicle, all_cars):
 
@@ -171,7 +173,11 @@ def neighbour_cars(road, car):
 
     return next_car, prev_car
 
-def traffic():
+def traffic(max_speed):
+    pygame.init()
+
+    clock = pygame.time.Clock()
+    clock.tick(60)
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
     all_cars = Group()
@@ -179,10 +185,29 @@ def traffic():
     road = Road(4,50)
     road.add_lane()
     road.delete_lane(all_cars)
+    start_ticks=pygame.time.get_ticks()
+    trafficcount = 0
+    trafficcountie = 0
+    graphie = []
+    graphieint = []
+    timie = []
+    # graphtime interval
+    t = 2
+
 
     while True:
-        tijd.sleep(0.05)
-        all_cars = vehicle_spawn(road, all_cars)
+        tijd.sleep(0.00000005)
+        seconds=(pygame.time.get_ticks()-start_ticks)/1000
+
+
+        if int(seconds) % t == 0 and int(seconds) not in timie:
+            print(int(seconds))
+            graphie.append(trafficcount)
+            graphieint.append(trafficcountie)
+            trafficcountie = 0
+            timie.append(int(seconds))
+        # else:
+        all_cars = vehicle_spawn(road, all_cars, max_speed)
 
         for car in all_cars:
             if car.x > WIDTH - 10:
@@ -231,6 +256,9 @@ def traffic():
 
             car.move()
             if car.x > WIDTH:
+                # print(car.speed)
+                trafficcount += 1
+                trafficcountie += 1
                 print('car has exited', car.speed, car.max_speed)
                 road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
@@ -243,8 +271,10 @@ def traffic():
                     pygame.quit()
 
             if event.type == pygame.QUIT:
+                # total average number of vehicles per time interval
+                trafficflow = (trafficcount / seconds) *t
                 pygame.quit()
-                exit()
+                return trafficflow, graphie, graphieint, timie
 
         # make pygame
         frame.blit(background_image, [0, 0])
@@ -253,5 +283,20 @@ def traffic():
         pygame.display.flip()
 
 
+
+
 if __name__ == '__main__':
-    traffic()
+    # # run traffic lower speed
+    # average_tf_l, cummulative_tf_l, interval_tf_l, timeline_l = traffic(100)
+    # # run traffic higher speed
+    # average_tf_h, cummulative_tf_h, interval_tf_h, timeline_h = traffic(130)
+    # # plt.plot(timeline, cummulative_tf, label="Cummulative trafficflow", c="#7F98FF")
+    # # plt.plot(timeline, interval_tf, label="Trafficflow per time unit", c="#3152D4")
+    # # plt.plot(timeline, [average_tf] * len(timeline), label="Average trafficflow", c="#001F9A")
+    # plt.plot(timeline_l, cummulative_tf_l, label="Cummulative trafficflow", c="lightblue")
+    # plt.plot(timeline_l, interval_tf_l, label="Trafficflow per time unit", c="blue")
+    # plt.plot(timeline_l, [average_tf_l] * len(timeline_l), label="Average trafficflow", c="darkblue")
+    # plt.legend()
+    # plt.show()
+    
+    traffic(130)

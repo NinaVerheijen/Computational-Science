@@ -32,8 +32,7 @@ class Vehicle(pygame.sprite.Sprite):
     # Constructor. Pass in the color of the Vehicle,
     # and its x and y position
 
-
-    def __init__(self, ID, model, color, size, x, lane, speed, direction):
+    def __init__(self, ID, model, maximumspeed, color, size, x, lane, speed, direction):
 
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
@@ -50,7 +49,7 @@ class Vehicle(pygame.sprite.Sprite):
         if self.model == 'truck':
             self.max_speed = 90
         else:
-            self.max_speed = 130
+            self.max_speed = maximumspeed
 
         chance = random.uniform(0,1)
         if chance > 0.5:
