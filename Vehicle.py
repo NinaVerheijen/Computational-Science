@@ -54,8 +54,8 @@ class Vehicle(pygame.sprite.Sprite):
         else:
             self.max_speed = maximumspeed * self.aggression
 
-            self.bias_left = 1
-            self.bias_right = -0.2
+            self.bias_left = 0.5
+            self.bias_right = -0.2 + (self.lane*0.1)
 
         chance = random.uniform(0,1)
         if chance > 0.5:

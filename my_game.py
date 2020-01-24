@@ -38,6 +38,28 @@ pygame.display.set_caption('Traffic Simulator')
 # a_thres is used during lane switching to check if the new follow doesn't have to brake to much. a_thresh must be lower than the lowest acceleration of all vehicles.
 a_thres = 0.2
 
+RED = (204, 0, 0)
+PURPLE = (204, 51, 255)
+LIGHTBLUE = (102, 153, 255)
+BLUE = (0, 153, 255)
+GREEN_BLUE = (51, 204, 204)
+GREEN = (0, 204, 0)
+
+# Color car depending on speed.
+def color_car(car):
+    if car.speed >= 0 and car.speed <= 20:
+        car.image.fill(RED)
+    elif car.speed > 20 and car.speed <= 40:
+        car.image.fill(PURPLE)
+    elif car.speed > 40 and car.speed <= 60:
+        car.image.fill(LIGHTBLUE)
+    elif car.speed > 60 and car.speed <= 80:
+        car.image.fill(BLUE)
+    elif car.speed > 80 and car.speed <= 100:
+        car.image.fill(GREEN_BLUE)
+    else:
+        car.image.fill(GREEN)
+        
 
 
 def meter_to_pixel(distance):
@@ -163,6 +185,11 @@ def lane_switching(car, road, all_cars):
     else:
         right_acc = -200
         follower_right_acc = -200
+
+    if car.max_speed < 80:
+        car.bias_right -= 1
+    else:
+        car.bias_right = car.bias_right
 
     # Check which acceleration is the biggest.
     if left_acc > (current_acc + a_thres + car.bias_left) and follower_left_acc > -4:
@@ -333,7 +360,7 @@ def traffic(max_speed):
 
 
     while True:
-        tijd.sleep(0.00000005)
+        tijd.sleep(0.05)
         seconds=(pygame.time.get_ticks()-start_ticks)/1000
 
 
@@ -406,7 +433,7 @@ def traffic(max_speed):
                 trafficcount += 1
                 trafficcountie += 1
 
-                print('car has exited', car.speed, car.max_speed)
+                # print('car has exited', car.speed, car.max_speed)
 
                 print(car.speed, car.max_speed)
                 road.lanes[int(car.lane - 1)].pop()
