@@ -76,12 +76,92 @@ def vehicle_spawn(road, all_cars):
     return all_cars
 
 def lane_switching(car, road, all_cars):
+    left = True
+    right = True
+    index = None
+    left_follower = None
+    left_leader = None
+    right_follower = None
+    right_leader = None
+    car.can_switch = False
+
+    # Make sure they are not accidentaly choosen
+    left_acc = -200
+    right_acc = -200
+    follower_left_acc = -200
+    follower_right_acc = -200
+
+    # get the x positions of cars in the adjecent lanes
+    if car.lane != 1 and car.lane != 4:
+        cars_x_pos_left = ([x_pos.x for x_pos in
+                            road.lanes[int(car.lane - 1)-1]])
+        cars_x_pos_right = ([x_pos.x for x_pos in
+                                road.lanes[int(car.lane + 1)-1]])
+        index_left = bisect.bisect(cars_x_pos_left, car.x)
+        index_right = bisect.bisect(cars_x_pos_right, car.x)
+
+        left_follower, left_leader = left_right_neighbours(
+            index_left, cars_x_pos_left, all_cars)
+        right_follower, right_leader = left_right_neighbours(
+            index_right, cars_x_pos_right, all_cars)
+
+    # If car is in left most lane
+    if car.lane == 1:
+        left = False
+        cars_x_pos_right = ([x_pos.x for x_pos in
+                            road.lanes[int(car.lane + 1)-1]])
+        index_right = bisect.bisect(cars_x_pos_right, car.x)
+        right_follower, right_leader = left_right_neighbours(
+            index_right, cars_x_pos_right, all_cars)
+        
+    # If car is in right most lane
+    if car.lane == 4:
+        right = False
+        cars_x_pos_left = ([x_pos.x for x_pos in
+                            road.lanes[int(car.lane - 1)-1]])
+        index_left = bisect.bisect(cars_x_pos_left, car.x)
+        left_follower, left_leader = left_right_neighbours(
+            index_left, cars_x_pos_left, all_cars)
+    
+    # leader and follower in current lane.
+    leader, _ = neighbour_cars(road, car)
+
+    # Compute current gap and acc
+    if leader == None:
+        current_acc = car.comp_acc(10000, car.max_speed)
+    else:
+        current_gap = compute_gap(car, leader)
+        current_acc = car.comp_acc(current_gap, leader.speed)
+
+    # If car is not in left most lane and has a follower and leader, compute acc
+    if left == True and left_follower is not None and left_leader is not None:
+        if compute_gap(car, left_leader) > car.gap_want and compute_gap(left_follower, car) > car.gap_want:
+            # Check if new follower does not have to break to much
+            follower_gap_left = compute_gap(left_follower, car)
+            follower_left_acc = left_follower.comp_acc(follower_gap_left, car.speed)
+
+            # Check if there is an increase in acc
+            left_gap = compute_gap(car, left_leader)
+            left_acc = car.comp_acc(left_gap, left_leader.speed)
+    else:
+        left_acc = -200
+        follower_left_acc = -200
+
+    # If car is not in right most lane and has a follower and leader, compute acc
+    if right == True and right_follower is not None and right_leader is not None:
+        if compute_gap(car, right_leader) > car.gap_want and compute_gap(right_follower, car) > car.gap_want:
+            # Check if new follower does not have to break to much
+            follower_gap_right = compute_gap(right_follower, car)
+            follower_right_acc = right_follower.comp_acc(
+                follower_gap_right, car.speed)
+
+            # Check if there is an increase in acc
+            right_gap = compute_gap(car, right_leader)
 
     if car.y in road.pos_lanes:
         car.left_or_right = random.uniform(0, 1)
         # exception if most left lane or most right lane
         if car.lane * 10 + 29 == road.pos_lanes[0]:
-            car.left_or_right = 1
 
         if car.lane * 10 + 29 == road.pos_lanes[-1]:
             car.left_or_right = 0
@@ -91,6 +171,8 @@ def lane_switching(car, road, all_cars):
         car.left_right = -1
     else:
         car.left_right = 1
+
+    # # Which lane switch,  -1 is naar boven
 
     # get the x positions of cars in the lane where the car is going to
     if car.left_right == 1 or car.left_right == -1:
@@ -134,15 +216,17 @@ def lane_switching(car, road, all_cars):
                 # Check if there is an increase in acc
                 switch_gap = compute_gap(car, next_car)
                 switch_acc = car.comp_acc(switch_gap, next_car.speed)
+        #         switch_gap = compute_gap(car, next_car)
+        #         switch_acc = car.comp_acc(switch_gap, next_car.speed)
                 
 
                 if switch_acc > (current_acc + a_thres) and prev_acc > -4 :
                     car.can_switch = True
                     car.image.fill((0, 255, 0))
 
-                    if car in road.lanes[int(car.lane-1)]:
-                        road.lanes[int(car.lane - 1)].remove(car)
-        return(index)
+        #             if car in road.lanes[int(car.lane-1)]:
+        #                 road.lanes[int(car.lane - 1)].remove(car)
+        # return(index)
 
 
 # Returns gap from bumper to bumper in meters.
@@ -156,6 +240,13 @@ def compute_gap(follower, leader):
     if gap < 0:
         gap = 0.00000001
     return pixel_to_meter(gap)
+
+
+        # If the car has a follower.
+        if index is not 0:
+            if check_car.x == cars_x_positions[index - 1]:
+                follower = check_car
+    return follower, leader
 
 def neighbour_cars(road, car):
     next_car = None
@@ -185,8 +276,7 @@ def traffic():
         all_cars = vehicle_spawn(road, all_cars)
 
         for car in all_cars:
-            if car.x > WIDTH - 10:
-                print(car.speed)
+                
             change_lanes = random.uniform(0, 1)
 
             if change_lanes < 0.9:
@@ -204,10 +294,11 @@ def traffic():
                 # lane switch complete
                 if car.can_switch == True:
                     if car.y in road.pos_lanes:
-                        car.lane = (car.y-29) / 10
-                        road.lanes[int(car.lane-1)].insert(index, car)
+                        
                         car.switch = False
                         car.can_switch = False
+                        car.is_switching = False
+
 
                         if car.model == 'car':
                             car.image.fill((255,0,0))
@@ -231,7 +322,7 @@ def traffic():
 
             car.move()
             if car.x > WIDTH:
-                print('car has exited', car.speed, car.max_speed)
+                print(car.speed, car.max_speed)
                 road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
 

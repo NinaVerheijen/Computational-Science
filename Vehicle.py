@@ -49,8 +49,12 @@ class Vehicle(pygame.sprite.Sprite):
         
         if self.model == 'truck':
             self.max_speed = 90
+            self.bias_left = 2
+            self.bias_right = -1
         else:
             self.max_speed = 130
+            self.bias_left = 1
+            self.bias_right = -0.2
 
         chance = random.uniform(0,1)
         if chance > 0.5:
@@ -60,7 +64,6 @@ class Vehicle(pygame.sprite.Sprite):
             if too_fast <= 0.1:
                 
                 self.max_speed = self.max_speed + speed
-                print('max_speed = ', self.max_speed)
             else:
                 self.max_speed = self.max_speed + random.randint(3,10)
         # 40-60% over speed limit, 10-20% over de 10 km boven speed limit
@@ -73,6 +76,8 @@ class Vehicle(pygame.sprite.Sprite):
         self.left_right = None
         self.left_or_right = None
         self.gap_want = 50
+        self.is_switching = False
+
 
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y
