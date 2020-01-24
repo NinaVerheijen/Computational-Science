@@ -6,6 +6,7 @@ import math as Math
 import random
 import bisect
 import time as tijd
+import matplotlib.pyplot as plt
 from pygame import *
 from pygame.locals import *
 from pygame.sprite import *
@@ -15,10 +16,10 @@ from road import Road
 # from Vehicle import Vehicle
 os.environ['SDL_VIDEO_WINDOW_POS'] = '0,0'
 
-pygame.init()
+# pygame.init()
 
-clock = pygame.time.Clock()
-clock.tick(60)
+# clock = pygame.time.Clock()
+# clock.tick(60)
 
 # background 2 or 3 lanes
 
@@ -28,7 +29,7 @@ background_image = pygame.image.load("3baans.png")
 # lanes = [lane1, lane2, lane3]
 random.seed(2)
 
-WIDTH = 1920 # 12 km?
+WIDTH = 1920 # 12 km? #1920
 HEIGHT = 100
 road_length = 12
 # CAPTION = 'Traffic Simulator'
@@ -51,18 +52,19 @@ def pixel_to_meter(pixels):
     dist = one_p*pixels
     return dist
 
-def vehicle_spawn(road, all_cars):
+
+def vehicle_spawn(road, all_cars, max_speed):
     chance = random.uniform(0, 1)
 
-    if chance < 0.3:
+    if chance < 0.1:
         truck_chance = random.uniform(0,1)
         if truck_chance < 0.80:
-            vehicle = Vehicle(chance, 'car', (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2), [0.2,0])
-            
+            vehicle = Vehicle(chance, 'car', max_speed, (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2), [0.2,0])
+
 
         else:
             choice = random.choices(population = road.pos_lanes, weights = [0, 0.01, 0.1, 0.85])
-            vehicle = Vehicle(chance, 'truck', (0, 0, 255), [98/2, 14/2], 10, choice[0], 80 + random.randrange(-5,5,1), [0.2,0])
+            vehicle = Vehicle(chance, 'truck', max_speed, (0, 0, 255), [98/2, 14/2], 10, choice[0], 80 + random.randrange(-5,5,1), [0.2,0])
 
         if not spritecollideany(vehicle, all_cars):
 
@@ -113,7 +115,7 @@ def lane_switching(car, road, all_cars):
         index_right = bisect.bisect(cars_x_pos_right, car.x)
         right_follower, right_leader = left_right_neighbours(
             index_right, cars_x_pos_right, all_cars)
-        
+
     # If car is in right most lane
     if car.lane == 4:
         right = False
@@ -122,7 +124,7 @@ def lane_switching(car, road, all_cars):
         index_left = bisect.bisect(cars_x_pos_left, car.x)
         left_follower, left_leader = left_right_neighbours(
             index_left, cars_x_pos_left, all_cars)
-    
+
     # leader and follower in current lane.
     leader, _ = neighbour_cars(road, car)
 
@@ -187,8 +189,8 @@ def lane_switching(car, road, all_cars):
 
             car.lane = car.lane + car.left_right
             road.lanes[int(car.lane-1)].insert(index, car)
-            
-    
+
+
     return index
 
 
@@ -256,7 +258,7 @@ def lane_switching(car, road, all_cars):
         #             a_thres = car.bias_right
         #         else:
         #             a_thres = car.bias_left
-                
+
 
         #         if switch_acc > (current_acc + a_thres) and prev_acc > -4 :
         #             car.can_switch = True
@@ -309,21 +311,43 @@ def neighbour_cars(road, car):
 
     return next_car, prev_car
 
-def traffic():
+def traffic(max_speed):
+    pygame.init()
+
+    clock = pygame.time.Clock()
+    clock.tick(60)
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
     all_cars = Group()
     # Make the road
-    road = Road(4,50)
-    road.add_lane()
-    road.delete_lane(all_cars)
+    road = Road(4)
+ 
+    start_ticks=pygame.time.get_ticks()
+    trafficcount = 0
+    trafficcountie = 0
+    graphie = []
+    graphieint = []
+    timie = []
+    # graphtime interval
+    t = 2
+
 
     while True:
-        tijd.sleep(0.05)
-        all_cars = vehicle_spawn(road, all_cars)
+        tijd.sleep(0.00000005)
+        seconds=(pygame.time.get_ticks()-start_ticks)/1000
+
+
+        if int(seconds) % t == 0 and int(seconds) not in timie:
+            # print(int(seconds))
+            graphie.append(trafficcount)
+            graphieint.append(trafficcountie)
+            trafficcountie = 0
+            timie.append(int(seconds))
+        # else:
+        all_cars = vehicle_spawn(road, all_cars, max_speed)
 
         for car in all_cars:
-                
+
             change_lanes = random.uniform(0, 1)
 
             if change_lanes < 0.9:
@@ -340,12 +364,12 @@ def traffic():
                     car.y += car.left_right
                     # car.lane = (car.y-29) / 10
                     # road.lanes[int(car.lane-1)].insert(index, car)
-                    
+
 
                 # lane switch complete
                 if car.can_switch == True:
                     if car.y in road.pos_lanes:
-                        
+
                         car.switch = False
                         car.can_switch = False
                         car.is_switching = False
@@ -358,7 +382,11 @@ def traffic():
 
             if next_car is not None:
                 gap = compute_gap(car, next_car)
+                
                 acc = car.comp_acc(gap, next_car.speed)
+                # if car.speed < 10:
+                    # print(gap, 'ACC', acc, '\n', car.x, car.lane)
+                    # print('-------------------------')
                 car.speed += acc
 
                 # prevent cars from going backwards.
@@ -366,6 +394,7 @@ def traffic():
                     car.speed = 0
             else:
                 gap = 10000
+
                 car.speed += car.comp_acc(gap, car.max_speed)
 
                 if car.speed < 0:
@@ -373,6 +402,12 @@ def traffic():
 
             car.move()
             if car.x > WIDTH:
+
+                trafficcount += 1
+                trafficcountie += 1
+
+                print('car has exited', car.speed, car.max_speed)
+
                 print(car.speed, car.max_speed)
                 road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
@@ -383,10 +418,14 @@ def traffic():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     pygame.quit()
+                if event.key == K_SPACE:
+                    tijd.sleep(4)
 
             if event.type == pygame.QUIT:
+                # total average number of vehicles per time interval
+                trafficflow = (trafficcount / seconds) *t
                 pygame.quit()
-                exit()
+                return trafficflow, graphie, graphieint, timie
 
         # make pygame
         frame.blit(background_image, [0, 0])
@@ -395,5 +434,20 @@ def traffic():
         pygame.display.flip()
 
 
+
+
 if __name__ == '__main__':
-    traffic()
+    # # run traffic lower speed
+    # average_tf_l, cummulative_tf_l, interval_tf_l, timeline_l = traffic(100)
+    # # run traffic higher speed
+    # average_tf_h, cummulative_tf_h, interval_tf_h, timeline_h = traffic(130)
+    # # plt.plot(timeline, cummulative_tf, label="Cummulative trafficflow", c="#7F98FF")
+    # # plt.plot(timeline, interval_tf, label="Trafficflow per time unit", c="#3152D4")
+    # # plt.plot(timeline, [average_tf] * len(timeline), label="Average trafficflow", c="#001F9A")
+    # plt.plot(timeline_l, cummulative_tf_l, label="Cummulative trafficflow", c="lightblue")
+    # plt.plot(timeline_l, interval_tf_l, label="Trafficflow per time unit", c="blue")
+    # plt.plot(timeline_l, [average_tf_l] * len(timeline_l), label="Average trafficflow", c="darkblue")
+    # plt.legend()
+    # plt.show()
+
+    traffic(130)
