@@ -2,6 +2,7 @@ import pygame
 import sys
 import math as Math
 import random
+import numpy as np
 import time as tijd
 from pygame import *
 from pygame.locals import *
@@ -15,15 +16,11 @@ def meter_to_pixel(distance):
     one_m = WIDTH/(road_length * 1000)
     dist = distance*one_m
 
-    # dist = distance*3
-
     return dist
 
 def pixel_to_meter(pixels):
     one_p = (road_length * 1000)/WIDTH
     dist = pixels*one_p
-
-    # dist = pixels/3
 
     return dist
 
@@ -45,11 +42,15 @@ class Vehicle(pygame.sprite.Sprite):
         self.lane = (lane-29) / 10 
         self.speed  = speed * (1 - self.lane/100*10)
         self.model = model
-        
+
+        std = np.random.normal(1, 0.4, 2)
+
+        self.aggression  = abs(np.mean(std))
+
         if self.model == 'truck':
             self.max_speed = 90
         else:
-            self.max_speed = maximumspeed
+            self.max_speed = maximumspeed * self.aggression
 
         chance = random.uniform(0,1)
         if chance > 0.5:
@@ -59,10 +60,12 @@ class Vehicle(pygame.sprite.Sprite):
             if too_fast <= 0.1:
                 
                 self.max_speed = self.max_speed + speed
-                print('max_speed = ', self.max_speed)
+                # print('max_speed = ', self.max_speed)
             else:
                 self.max_speed = self.max_speed + random.randint(3,10)
         # 40-60% over speed limit, 10-20% over de 10 km boven speed limit
+
+        # attributes for switching
         self.x = int(x)  # variable denoting x position of car
         self.y = int(lane)
         self.direction = direction
@@ -71,7 +74,7 @@ class Vehicle(pygame.sprite.Sprite):
         self.can_switch = False
         self.left_right = None
         self.left_or_right = None
-        self.gap_want = 50
+        self.gap_want = 50 * (2 - self.aggression)
 
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y
@@ -88,18 +91,24 @@ class Vehicle(pygame.sprite.Sprite):
         T is desired safety time -> 1.5 s
         s is current gap
         """
-        s_0 = self.gap_want  # minimum gap between cars
-        a = 0.3
         b = 3
-        T = 1.5
+
+        if self.model == 'truck':
+            s_0 = self.gap_want + 20
+            a = 0.25 * (self.aggression) 
+            T = 2 * (2- self.aggression)
+        else:
+            s_0 = self.gap_want  # minimum gap between cars
+            a = 0.3 * (self.aggression) 
+            T = 1.5 * (2 - self.aggression)
         des_gap = s_0 + max(0, v*T + ((v*d_v)/ (2*Math.sqrt(a*b))))
         return des_gap
 
     def comp_acc(self, s, lead_speed):
-        a = 0.3
+        a = 0.3 * (self.aggression) 
         
-        v_0 = (self.max_speed) * ((1 - self.lane/100*5)+ 0.1)
-        # print(v_0)
+        v_0 = (self.max_speed) 
+        # * ((1 - self.lane/100*5)+ 0.1)
 
         v = self.speed
         d = 4
