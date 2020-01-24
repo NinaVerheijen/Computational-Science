@@ -29,7 +29,7 @@ background_image = pygame.image.load("3baans.png")
 # lanes = [lane1, lane2, lane3]
 random.seed(2)
 
-WIDTH = 1920 # 12 km?
+WIDTH = 1920 # 12 km? #1920
 HEIGHT = 100
 road_length = 12
 # CAPTION = 'Traffic Simulator'
@@ -56,7 +56,7 @@ def pixel_to_meter(pixels):
 def vehicle_spawn(road, all_cars, max_speed):
     chance = random.uniform(0, 1)
 
-    if chance < 0.3:
+    if chance < 0.1:
         truck_chance = random.uniform(0,1)
         if truck_chance < 0.80:
             vehicle = Vehicle(chance, 'car', max_speed, (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2), [0.2,0])
@@ -320,9 +320,8 @@ def traffic(max_speed):
 
     all_cars = Group()
     # Make the road
-    road = Road(4,50)
-    road.add_lane()
-    road.delete_lane(all_cars)
+    road = Road(4)
+ 
     start_ticks=pygame.time.get_ticks()
     trafficcount = 0
     trafficcountie = 0
@@ -339,7 +338,7 @@ def traffic(max_speed):
 
 
         if int(seconds) % t == 0 and int(seconds) not in timie:
-            print(int(seconds))
+            # print(int(seconds))
             graphie.append(trafficcount)
             graphieint.append(trafficcountie)
             trafficcountie = 0
@@ -383,7 +382,11 @@ def traffic(max_speed):
 
             if next_car is not None:
                 gap = compute_gap(car, next_car)
+                
                 acc = car.comp_acc(gap, next_car.speed)
+                # if car.speed < 10:
+                    # print(gap, 'ACC', acc, '\n', car.x, car.lane)
+                    # print('-------------------------')
                 car.speed += acc
 
                 # prevent cars from going backwards.
@@ -391,6 +394,7 @@ def traffic(max_speed):
                     car.speed = 0
             else:
                 gap = 10000
+
                 car.speed += car.comp_acc(gap, car.max_speed)
 
                 if car.speed < 0:
@@ -398,9 +402,10 @@ def traffic(max_speed):
 
             car.move()
             if car.x > WIDTH:
-                # print(car.speed)
+
                 trafficcount += 1
                 trafficcountie += 1
+
                 print('car has exited', car.speed, car.max_speed)
 
                 print(car.speed, car.max_speed)
@@ -413,6 +418,8 @@ def traffic(max_speed):
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     pygame.quit()
+                if event.key == K_SPACE:
+                    tijd.sleep(4)
 
             if event.type == pygame.QUIT:
                 # total average number of vehicles per time interval
