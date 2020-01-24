@@ -65,6 +65,7 @@ class Vehicle(pygame.sprite.Sprite):
             if too_fast <= 0.1:
 
                 self.max_speed = self.max_speed + speed
+
             else:
                 self.max_speed = self.max_speed + random.randint(3,10)
         # 40-60% over speed limit, 10-20% over de 10 km boven speed limit
