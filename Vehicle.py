@@ -39,7 +39,7 @@ class Vehicle(pygame.sprite.Sprite):
         self.ID = ID
         self.image = pygame.Surface(size)
         self.image.fill(color)
-        self.lane = (lane-29) / 10 
+        self.lane = (lane-29) / 10
         self.speed  = speed * (1 - self.lane/100*10)
         self.model = model
 
@@ -49,8 +49,13 @@ class Vehicle(pygame.sprite.Sprite):
 
         if self.model == 'truck':
             self.max_speed = 90
+            self.bias_left = 2
+            self.bias_right = -1
         else:
             self.max_speed = maximumspeed * self.aggression
+
+            self.bias_left = 1
+            self.bias_right = -0.2
 
         chance = random.uniform(0,1)
         if chance > 0.5:
@@ -58,9 +63,8 @@ class Vehicle(pygame.sprite.Sprite):
             speed = int(round(10 + (50 - 10) * bias))
             too_fast = random.uniform(0,1)
             if too_fast <= 0.1:
-                
+
                 self.max_speed = self.max_speed + speed
-                # print('max_speed = ', self.max_speed)
             else:
                 self.max_speed = self.max_speed + random.randint(3,10)
         # 40-60% over speed limit, 10-20% over de 10 km boven speed limit
@@ -74,7 +78,12 @@ class Vehicle(pygame.sprite.Sprite):
         self.can_switch = False
         self.left_right = None
         self.left_or_right = None
+
         self.gap_want = 50 * (2 - self.aggression)
+
+        self.is_switching = False
+
+
 
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y
@@ -108,7 +117,7 @@ class Vehicle(pygame.sprite.Sprite):
         a = 0.3 * (self.aggression) 
         
         v_0 = (self.max_speed) 
-        # * ((1 - self.lane/100*5)+ 0.1)
+
 
         v = self.speed
         d = 4
@@ -117,7 +126,7 @@ class Vehicle(pygame.sprite.Sprite):
         a_int = a*((self.desired_gap(v, d_v) / s)**2) # hoeveel de auto de gap wil van de auto voor hem
 
         acc =  a_free - a_int
-        
+
         return acc
 
     def move(self):
