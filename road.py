@@ -3,10 +3,9 @@ import pygame
 
 class Road:
 
-    def __init__(self, lanes, max_speed):
+    def __init__(self, lanes):
 
         self.lanes = []
-        self.max_speed = max_speed
         self.pos_lanes = []
         
         # Initialize the starting lanes
