@@ -3,6 +3,7 @@ import pygame
 import sys
 import os
 import math as Math
+import numpy as np
 import random
 import bisect
 import time as tijd
@@ -16,18 +17,12 @@ from road import Road
 # from Vehicle import Vehicle
 os.environ['SDL_VIDEO_WINDOW_POS'] = '0,0'
 
-# pygame.init()
-
-# clock = pygame.time.Clock()
-# clock.tick(60)
-
 # background 2 or 3 lanes
-
 # background_image = pygame.image.load("2baans.png")
 background_image = pygame.image.load("3baans.png")
 
 # lanes = [lane1, lane2, lane3]
-random.seed(2)
+# random.seed(2)
 
 WIDTH = 1920 # 12 km? #1920
 HEIGHT = 100
@@ -38,6 +33,28 @@ pygame.display.set_caption('Traffic Simulator')
 # a_thres is used during lane switching to check if the new follow doesn't have to brake to much. a_thresh must be lower than the lowest acceleration of all vehicles.
 a_thres = 0.2
 
+RED = (204, 0, 0)
+PURPLE = (204, 51, 255)
+LIGHTBLUE = (102, 153, 255)
+BLUE = (0, 153, 255)
+GREEN_BLUE = (51, 204, 204)
+GREEN = (0, 204, 0)
+
+# Color car depending on speed.
+def color_car(car):
+    if car.speed >= 0 and car.speed <= 20:
+        car.image.fill(RED)
+    elif car.speed > 20 and car.speed <= 40:
+        car.image.fill(PURPLE)
+    elif car.speed > 40 and car.speed <= 60:
+        car.image.fill(LIGHTBLUE)
+    elif car.speed > 60 and car.speed <= 80:
+        car.image.fill(BLUE)
+    elif car.speed > 80 and car.speed <= 100:
+        car.image.fill(GREEN_BLUE)
+    else:
+        car.image.fill(GREEN)
+        
 
 
 def meter_to_pixel(distance):
@@ -53,10 +70,11 @@ def pixel_to_meter(pixels):
     return dist
 
 
-def vehicle_spawn(road, all_cars, max_speed):
+def vehicle_spawn(road, all_cars, max_speed, car_density):
     chance = random.uniform(0, 1)
 
-    if chance < 0.1:
+    if chance < car_density:
+
         truck_chance = random.uniform(0,1)
         if truck_chance < 0.80:
             vehicle = Vehicle(chance, 'car', max_speed, (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2), [0.2,0])
@@ -163,6 +181,11 @@ def lane_switching(car, road, all_cars):
     else:
         right_acc = -200
         follower_right_acc = -200
+
+    if car.max_speed < 80:
+        car.bias_right -= 1
+    else:
+        car.bias_right = car.bias_right
 
     # Check which acceleration is the biggest.
     if left_acc > (current_acc + a_thres + car.bias_left) and follower_left_acc > -4:
@@ -311,7 +334,7 @@ def neighbour_cars(road, car):
 
     return next_car, prev_car
 
-def traffic(max_speed):
+def traffic(max_speed, car_density):
     pygame.init()
 
     clock = pygame.time.Clock()
@@ -323,30 +346,29 @@ def traffic(max_speed):
     road = Road(4)
  
     start_ticks=pygame.time.get_ticks()
-    trafficcount = 0
-    trafficcountie = 0
-    graphie = []
-    graphieint = []
-    timie = []
-    # graphtime interval
+    traf_count = 0
+    traf_counts = []
+    timestamps = []
+    # graph time interval
     t = 2
 
 
     while True:
-        tijd.sleep(0.00000005)
+        tijd.sleep(0.00000000000000000000000000000000000000000000000000000005)
         seconds=(pygame.time.get_ticks()-start_ticks)/1000
 
 
-        if int(seconds) % t == 0 and int(seconds) not in timie:
-            # print(int(seconds))
-            graphie.append(trafficcount)
-            graphieint.append(trafficcountie)
-            trafficcountie = 0
-            timie.append(int(seconds))
-        # else:
-        all_cars = vehicle_spawn(road, all_cars, max_speed)
+        if int(seconds) % t == 0 and int(seconds) not in timestamps:
+            print(int(seconds))
+            timestamps.append(int(seconds))
+            traf_counts.append(traf_count)
+            traf_count = 0
+
+        all_cars = vehicle_spawn(road, all_cars, max_speed, car_density)
 
         for car in all_cars:
+            # if car.x > WIDTH - 10:
+                # print(car.speed)
 
             change_lanes = random.uniform(0, 1)
 
@@ -402,18 +424,27 @@ def traffic(max_speed):
 
             car.move()
             if car.x > WIDTH:
+                # print(seconds)
+                # print(car.speed)
+                traf_count += 1
+                # print('car has exited', car.speed, car.max_speed)
 
                 trafficcount += 1
                 trafficcountie += 1
 
-                # print('car has exited', car.speed, car.max_speed)
 
-                # print(car.speed, car.max_speed)
                 road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
 
 
         # quit pygame
+        if seconds > 30:
+            pygame.quit()
+            trafficflow = (np.sum(traf_counts) / seconds) *t
+            return trafficflow, traf_counts , timestamps
+
+
+
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
@@ -432,10 +463,10 @@ def traffic(max_speed):
 
 
             if event.type == pygame.QUIT:
-                # total average number of vehicles per time interval
-                trafficflow = (trafficcount / seconds) *t
                 pygame.quit()
-                return trafficflow, graphie, graphieint, timie
+                # total average number of vehicles per time interval
+                trafficflow = (np.sum(traf_counts) / seconds) *t
+                return trafficflow, traf_counts , timestamps
 
         # make pygame
         frame.blit(background_image, [0, 0])
@@ -447,17 +478,49 @@ def traffic(max_speed):
 
 
 if __name__ == '__main__':
-    # # run traffic lower speed
-    # average_tf_l, cummulative_tf_l, interval_tf_l, timeline_l = traffic(100)
-    # # run traffic higher speed
-    # average_tf_h, cummulative_tf_h, interval_tf_h, timeline_h = traffic(130)
-    # # plt.plot(timeline, cummulative_tf, label="Cummulative trafficflow", c="#7F98FF")
-    # # plt.plot(timeline, interval_tf, label="Trafficflow per time unit", c="#3152D4")
-    # # plt.plot(timeline, [average_tf] * len(timeline), label="Average trafficflow", c="#001F9A")
-    # plt.plot(timeline_l, cummulative_tf_l, label="Cummulative trafficflow", c="lightblue")
-    # plt.plot(timeline_l, interval_tf_l, label="Trafficflow per time unit", c="blue")
-    # plt.plot(timeline_l, [average_tf_l] * len(timeline_l), label="Average trafficflow", c="darkblue")
-    # plt.legend()
-    # plt.show()
 
-    traffic(130)
+    intervals1 = np.array([0] * 16)
+    intervals2 = np.array([0] * 16)
+    intervals3 = np.array([0] * 16)
+    tf80 = []
+    tf100 = []
+    tf130 = []
+
+
+    for i in range(10):
+        tf_l, interval_l, time_l = traffic(80, 0.3)
+        tf80.append(tf_l)
+        intervals1 = np.add(intervals1, np.array(interval_l))
+
+        tf_l, interval_l, time_l = traffic(100, 0.3)
+        tf100.append(tf_l)
+        intervals2 = np.add(intervals2, np.array(interval_l))
+
+        tf_l, interval_l, time_l = traffic(130, 0.3)
+        tf130.append(tf_l)
+        intervals3 = np.add(intervals3, np.array(interval_l))
+
+    plt.figure(figsize=(20,10))
+    plt.plot(time_l, intervals1 / 10, label="Trafficflow per time unit %i, %i" % (80, 0.3), c="green")
+    plt.plot(time_l, [np.mean(tf80)] * len(time_l), label="Average trafficflow %i, %i" % (80, 0.3), c="lightgreen")
+
+    plt.plot(time_l, intervals2 / 10, label="Trafficflow per time unit %i, %i" % (100, 0.3), c="blue")
+    plt.plot(time_l, [np.mean(tf100)] * len(time_l), label="Average trafficflow %i, %i" % (100, 0.3), c="lightblue")
+
+    plt.plot(time_l, intervals3 / 10, label="Trafficflow per time unit %i, %i" % (130, 0.3), c="red")
+    plt.plot(time_l, [np.mean(tf130)]  * len(time_l), label="Average trafficflow %i, %i" % (130, 0.3), c="pink")
+
+    plt.xlabel("Time in seconds")
+    plt.ylabel("Number of vehicles")
+    plt.title("Traffic flow")
+    plt.legend()
+    plt.show()
+
+    plt.plot(time_l, np.cumsum(intervals1), label="Cummulative trafficflow %i, %i" % (80, 0.3), c="lightgreen")
+    plt.plot(time_l, np.cumsum(intervals2), label="Cummulative trafficflow %i, %i" % (100, 0.3), c="lightblue")
+    plt.plot(time_l, np.cumsum(intervals3), label="Cummulative trafficflow %i, %i" % (130, 0.3), c="pink")
+    plt.legend()
+    plt.show()
+
+
+#     traffic(130)
