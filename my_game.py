@@ -429,15 +429,11 @@ def traffic(max_speed, car_density):
                 traf_count += 1
                 # print('car has exited', car.speed, car.max_speed)
 
-<<<<<<< HEAD
-                trafficcount += 1
-                trafficcountie += 1
+                # trafficcount += 1
+                # trafficcountie += 1
 
-                # print('car has exited', car.speed, car.max_speed)
 
-                # print(car.speed, car.max_speed)
-=======
->>>>>>> a7c255d8ed26bb650cc821b85fbbace60228cc5a
+
                 road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
 
