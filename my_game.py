@@ -354,7 +354,7 @@ def traffic(max_speed, car_density):
     clock = pygame.time.Clock()
     clock.tick(60)
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-    background_image = pygame.image.load("4baans.png")
+    background_image = pygame.image.load("4lane.png")
 
     all_cars = Group()
     # Make the road
@@ -504,10 +504,11 @@ if __name__ == '__main__':
         plt.title("Traffic Flow at Different Speeds Outside Rush Hour")
         title = "NoRushHour"
 
-    # Initialize arrays to save datapoints
-    intervals1 = np.array([0] * 31)
-    intervals2 = np.array([0] * 31)
-    intervals3 = np.array([0] * 31)
+    # Initialize arrays to save datapoints, length depends on duration of the simulation and the timestamps
+    length = 31
+    intervals1 = np.array([0] * length)
+    intervals2 = np.array([0] * length)
+    intervals3 = np.array([0] * length)
     tf80 = []
     tf100 = []
     tf130 = []
@@ -551,7 +552,5 @@ if __name__ == '__main__':
 
     # Perform statistical analysis
     stat_an(title, intervals1, intervals2, intervals3)
-
-    return 0
 
 
