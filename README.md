@@ -8,7 +8,7 @@ The current settings that create the graph below let the model run for little ov
 
 
 ## How to use
-have pygame installed
+Have pygame installed
 
 In line ... set if you want to run the simulation in a rush hour situation or not
 
