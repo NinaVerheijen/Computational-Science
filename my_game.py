@@ -29,7 +29,7 @@ background_image = pygame.image.load("3baans.png")
 # lanes = [lane1, lane2, lane3]
 random.seed(2)
 
-WIDTH = 1920 # 12 km? #1920
+WIDTH = 1920 # #1920
 HEIGHT = 100
 road_length = 12
 # CAPTION = 'Traffic Simulator'
@@ -219,81 +219,6 @@ def lane_switching(car, road, all_cars):
 
 
     return index
-
-
-    # if car.y in road.pos_lanes:
-    #     car.left_or_right = random.uniform(0, 1)
-    #     # exception if most left lane or most right lane
-    #     if car.lane * 10 + 29 == road.pos_lanes[0]:
-    #         car.left_or_right = 1
-
-    #     if car.lane * 10 + 29 == road.pos_lanes[-1]:
-    #         car.left_or_right = 0
-
-    # # Which lane switch,  -1 is naar boven
-    # if car.left_or_right < 0.3:
-    #     car.left_right = -1
-    # else:
-    #     car.left_right = 1
-
-
-    # get the x positions of cars in the lane where the car is going to
-    # if car.left_right == 1 or car.left_right == -1:
-    #     cars_x_positions = ([x_pos.x for x_pos in road.lanes[int(car.lane + car.left_right)-1]])
-    #     index = bisect.bisect(cars_x_positions, car.x)
-    #     next_car = None
-    #     prev_car = None
-
-    #     # Find the previous and the next car in the switching lane
-    #     for check_car in all_cars:
-
-    #         # If the cars has a leader.
-    #         if index is not len(cars_x_positions):
-    #             if check_car.x == cars_x_positions[index]:
-    #                 next_car = check_car
-
-    #         # If the car has a follower.
-    #         if index is not 0:
-    #             if check_car.x == cars_x_positions[index - 1]:
-    #                 prev_car = check_car
-
-
-        # # The gap is big enough
-        # if (prev_car is not None and next_car is not None):
-
-        #     if compute_gap(car, next_car) > car.gap_want and compute_gap(prev_car, car) > car.gap_want:
-
-        #         # leader and follower in current lane.
-        #         leader, follower = neighbour_cars(road, car)
-
-        #         if leader == None:
-        #             current_gap = 10000
-        #             current_acc = car.comp_acc(current_gap, car.max_speed)
-        #         else:
-        #             current_gap = compute_gap(car, leader)
-        #             current_acc = car.comp_acc(current_gap, leader.speed)
-
-        #         # Check if new follower does not have to break to much
-        #         prev_gap = compute_gap(prev_car, car)
-        #         prev_acc = prev_car.comp_acc(prev_gap, car.speed)
-
-        #         # Check if there is an increase in acc
-        #         switch_gap = compute_gap(car, next_car)
-        #         switch_acc = car.comp_acc(switch_gap, next_car.speed)
-
-        #         if car.left_right == 1:
-        #             a_thres = car.bias_right
-        #         else:
-        #             a_thres = car.bias_left
-
-
-        #         if switch_acc > (current_acc + a_thres) and prev_acc > -4 :
-        #             car.can_switch = True
-        #             car.image.fill((0, 255, 0))
-
-        #             if car in road.lanes[int(car.lane-1)]:
-        #                 road.lanes[int(car.lane - 1)].remove(car)
-        # return(index)
 
 
 # Returns gap from bumper to bumper in meters.
