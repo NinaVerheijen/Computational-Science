@@ -239,9 +239,9 @@ def stat_an(title, samples1, samples2, samples3):
 
     file = open(str(title) + "T-Test.txt","w")
     file.write("Below you find the p and t values of the student t-test executed on the three different speeds.\n")
-    file.write("80 vs 100 \t | \t t = " + str(t1) + "\t | \t p = " + str(p1)"\n")
-    file.write("100 vs 130 \t | \t t = " + str(t2) + "\t | \t p = " + str(p2)"\n")
-    file.write("130 vs 80 \t | \t t = " + str(t3) +" \t | \t p = " + str(p3)"\n")
+    file.write("80 vs 100 \t | \t t = " + str(t1) + "\t | \t p = " + str(p1) + "\n")
+    file.write("100 vs 130 \t | \t t = " + str(t2) + "\t | \t p = " + str(p2) + "\n")
+    file.write("130 vs 80 \t | \t t = " + str(t3) +" \t | \t p = " + str(p3) + "\n")
     file.close()
 
 # Main function that simulates the traffic
