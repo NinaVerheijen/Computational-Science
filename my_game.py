@@ -3,102 +3,65 @@ import pygame
 import sys
 import os
 import math as Math
+import numpy as np
 import random
 import bisect
 import time as tijd
 import matplotlib.pyplot as plt
+from scipy import stats
 from pygame import *
 from pygame.locals import *
 from pygame.sprite import *
 from Vehicle import Vehicle
 from road import Road
 
-# from Vehicle import Vehicle
+# Open the simulation in the upper left corner
 os.environ['SDL_VIDEO_WINDOW_POS'] = '0,0'
 
-# pygame.init()
-
-# clock = pygame.time.Clock()
-# clock.tick(60)
-
-# background 2 or 3 lanes
-
-# background_image = pygame.image.load("2baans.png")
-background_image = pygame.image.load("3baans.png")
-
-# lanes = [lane1, lane2, lane3]
-random.seed(2)
-
-WIDTH = 1920 # #1920
+WIDTH = 1920
 HEIGHT = 100
 road_length = 12
-# CAPTION = 'Traffic Simulator'
 pygame.display.set_caption('Traffic Simulator')
 
-# a_thres is used during lane switching to check if the new follow doesn't have to brake to much. a_thresh must be lower than the lowest acceleration of all vehicles.
-a_thres = 0.2
 
-RED = (204, 0, 0)
-PURPLE = (204, 51, 255)
-LIGHTBLUE = (102, 153, 255)
-BLUE = (0, 153, 255)
-GREEN_BLUE = (51, 204, 204)
-GREEN = (0, 204, 0)
-
-# Color car depending on speed.
-def color_car(car):
-    if car.speed >= 0 and car.speed <= 20:
-        car.image.fill(RED)
-    elif car.speed > 20 and car.speed <= 40:
-        car.image.fill(PURPLE)
-    elif car.speed > 40 and car.speed <= 60:
-        car.image.fill(LIGHTBLUE)
-    elif car.speed > 60 and car.speed <= 80:
-        car.image.fill(BLUE)
-    elif car.speed > 80 and car.speed <= 100:
-        car.image.fill(GREEN_BLUE)
-    else:
-        car.image.fill(GREEN)
-        
-
-
+# Convert meters to pixels
 def meter_to_pixel(distance):
-    # hoeveel pixels in meter
     one_m = WIDTH/(road_length * 1000)
     dist = distance* one_m
     return dist
 
+# Convert pixels to meters
 def pixel_to_meter(pixels):
-    # meters in een pixel zitten
     one_p = (road_length * 1000)/WIDTH
     dist = one_p*pixels
     return dist
 
-
-def vehicle_spawn(road, all_cars, max_speed):
+# Create vehicles
+def vehicle_spawn(road, all_cars, max_speed, car_density):
+    # Chance for spawning a vehicle
     chance = random.uniform(0, 1)
-
-    if chance < 0.1:
+    if chance < car_density:
+        # Chance that the spawned vehicle is a truck
         truck_chance = random.uniform(0,1)
         if truck_chance < 0.80:
-            vehicle = Vehicle(chance, 'car', max_speed, (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2), [0.2,0])
-
-
+            vehicle = Vehicle('car', max_speed, (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2))
         else:
+            # Trucks spawning more on the right lane
             choice = random.choices(population = road.pos_lanes, weights = [0, 0.01, 0.1, 0.85])
-            vehicle = Vehicle(chance, 'truck', max_speed, (0, 0, 255), [98/2, 14/2], 10, choice[0], 80 + random.randrange(-5,5,1), [0.2,0])
+            vehicle = Vehicle('truck', max_speed, (0, 0, 255), [98/2, 14/2], 10, choice[0], 80 + random.randrange(-5,5,1))
 
+        # Don't spawn vehicles on top of eachother
         if not spritecollideany(vehicle, all_cars):
-
             all_cars.add(vehicle)
 
-            # put car in the right lane and keep track of which lane the car is
+            # Put car in the right lane and keep track of which lane the car is
             for number in range(len(road.pos_lanes)):
                 if vehicle.y == road.pos_lanes[number]:
                     road.lanes[number].insert(0, vehicle)
 
     return all_cars
 
+# Check if a vehicle should and can switch lanes
 def lane_switching(car, road, all_cars):
     left = True
     right = True
@@ -109,13 +72,13 @@ def lane_switching(car, road, all_cars):
     right_leader = None
     car.can_switch = False
 
-    # Make sure they are not accidentaly choosen
+    # Failsave so no random switches happen
     left_acc = -200
     right_acc = -200
     follower_left_acc = -200
     follower_right_acc = -200
 
-    # get the x positions of cars in the adjecent lanes
+    # Get the x positions of cars in the adjecent lanes
     if car.lane != 1 and car.lane != 4:
         cars_x_pos_left = ([x_pos.x for x_pos in
                             road.lanes[int(car.lane - 1)-1]])
@@ -147,10 +110,10 @@ def lane_switching(car, road, all_cars):
         left_follower, left_leader = left_right_neighbours(
             index_left, cars_x_pos_left, all_cars)
 
-    # leader and follower in current lane.
+    # Leading and following vehicle in current lane.
     leader, _ = neighbour_cars(road, car)
 
-    # Compute current gap and acc
+    # Compute current gap and acceleration
     if leader == None:
         current_acc = car.comp_acc(10000, car.max_speed)
     else:
@@ -186,40 +149,41 @@ def lane_switching(car, road, all_cars):
         right_acc = -200
         follower_right_acc = -200
 
+    # Slower vehicles have a tendency to go to the right lane
     if car.max_speed < 80:
-        car.bias_right -= 1
+        bias_right = car.bias_right - 1
     else:
-        car.bias_right = car.bias_right
+        bias_right = car.bias_right
 
     # Check which acceleration is the biggest.
-    if left_acc > (current_acc + a_thres + car.bias_left) and follower_left_acc > -4:
+    if left_acc > (current_acc + car.a_thres + car.bias_left) and follower_left_acc > -4:
         car.can_switch = True
         car.left_right = -1
         index = index_left
 
-        # If left acc > current acc, check if right > left, thus also > current.
-        if right_acc >= (left_acc + a_thres) and follower_right_acc > -4:
+        # Is right acc more than left acc, thus more than current acc
+        if right_acc >= (left_acc + car.a_thres) and follower_right_acc > -4:
             car.left_right = 1
             index = index_right
 
-    if right_acc > (current_acc + a_thres + car.bias_right) and follower_right_acc > -4:
+    # Right acc more than left acc
+    if right_acc > (current_acc + car.a_thres + bias_right) and follower_right_acc > -4:
         car.can_switch = True
         car.left_right = 1
         index = index_right
 
+    # It is possible to switch
     if car.can_switch == True:
         car.is_switching = True
 
+        # Update attributes of switching car to new lane
         if car in road.lanes[int(car.lane-1)]:
+            # Visualisation for switching lanes
             car.image.fill((0, 255, 0))
             road.lanes[int(car.lane - 1)].remove(car)
 
             car.lane = car.lane + car.left_right
             road.lanes[int(car.lane-1)].insert(index, car)
-
-
-    return index
-
 
 # Returns gap from bumper to bumper in meters.
 def compute_gap(follower, leader):
@@ -233,6 +197,7 @@ def compute_gap(follower, leader):
         gap = 0.00000001
     return pixel_to_meter(gap)
 
+# Find neighbours of adjacent lane
 def left_right_neighbours(index, cars_x_positions, all_cars):
     follower = None
     leader = None
@@ -249,6 +214,7 @@ def left_right_neighbours(index, cars_x_positions, all_cars):
                 follower = check_car
     return follower, leader
 
+# Find neighbours of current lane
 def neighbour_cars(road, car):
     next_car = None
     prev_car = None
@@ -263,107 +229,123 @@ def neighbour_cars(road, car):
 
     return next_car, prev_car
 
-def traffic(max_speed):
-    pygame.init()
 
+# This function performs the two-tail Student T-Test on three arrays of data.
+# The t and p values are written to a textfile
+def stat_an(title, samples1, samples2, samples3):
+    t1, p1 = stats.ttest_ind(samples1, samples2, axis=0, equal_var=False)
+    t2, p2 = stats.ttest_ind(samples2, samples3, axis=0, equal_var=False)
+    t3, p3 = stats.ttest_ind(samples3, samples1, axis=0, equal_var=False)
+
+    file = open(str(title) + "T-Test.txt","w")
+    file.write("Below you find the p and t values of the student t-test executed on the three different speeds.\n")
+    file.write("80 vs 100 \t | \t t = " + str(t1) + "\t | \t p = " + str(p1))
+    file.write("100 vs 130 \t | \t t = " + str(t2) + "\t | \t p = " + str(p2))
+    file.write("130 vs 80 \t | \t t = " + str(t3) +" \t | \t p = " + str(p3))
+    file.close()
+
+# Main function that simulates the traffic
+def traffic(max_speed, car_density):
+    # Set the duration of one simulation in seconds
+    length_of_simulation = 60
+    # Time interval in seconds for datapoint saving
+    t = 2
+
+    # Initiate the simulation
+    pygame.init()
     clock = pygame.time.Clock()
     clock.tick(60)
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    background_image = pygame.image.load("4baans.png")
+
+
+    start_ticks=pygame.time.get_ticks()
+    traf_count = 0
+    traf_counts = []
+    timestamps = []
+
 
     all_cars = Group()
+
     # Make the road
     road = Road(4)
- 
-    start_ticks=pygame.time.get_ticks()
-    trafficcount = 0
-    trafficcountie = 0
-    graphie = []
-    graphieint = []
-    timie = []
-    # graphtime interval
-    t = 2
-
 
     while True:
-        tijd.sleep(0.05)
-        seconds=(pygame.time.get_ticks()-start_ticks)/1000
+        tijd.sleep(0.00000000000000000000000000000000000000000000000000000005)
+        seconds = (pygame.time.get_ticks()-start_ticks)/1000
 
+        # Increment counters when an interval has been completed
+        if int(seconds) % t == 0 and int(seconds) not in timestamps:
+            timestamps.append(int(seconds))
+            traf_counts.append(traf_count)
+            traf_count = 0
 
-        if int(seconds) % t == 0 and int(seconds) not in timie:
-            # print(int(seconds))
-            graphie.append(trafficcount)
-            graphieint.append(trafficcountie)
-            trafficcountie = 0
-            timie.append(int(seconds))
-        # else:
-        all_cars = vehicle_spawn(road, all_cars, max_speed)
+        # Spawn a vehicle
+        all_cars = vehicle_spawn(road, all_cars, max_speed, car_density)
 
         for car in all_cars:
+            next_car, _ = neighbour_cars(road, car)
 
-            change_lanes = random.uniform(0, 1)
-
-           
-
-            next_car, prev_car = neighbour_cars(road, car)
-
+            # Check if car is already switching
             if car.is_switching is False:
-                index = lane_switching(car, road, all_cars)
+                lane_switching(car, road, all_cars)
 
             # Y changing from the car to new lane
             if car.can_switch == True:
                 car.y += car.left_right
-                # car.lane = (car.y-29) / 10
-                # road.lanes[int(car.lane-1)].insert(index, car)
 
-
-            # lane switch complete
+            # Lane switch complete
             if car.can_switch == True:
                 if car.y in road.pos_lanes:
 
-                    car.switch = False
+                    # Reset attributes
                     car.can_switch = False
                     car.is_switching = False
 
-
+                    # Visualisation for car back in lane
                     if car.model == 'car':
                         car.image.fill((255,0,0))
                     else:
                         car.image.fill((0, 0, 255))
 
+            # Change speed of the car depending on the leading car
             if next_car is not None:
                 gap = compute_gap(car, next_car)
-                
                 acc = car.comp_acc(gap, next_car.speed)
-                # if car.speed < 10:
-                    # print(gap, 'ACC', acc, '\n', car.x, car.lane)
-                    # print('-------------------------')
                 car.speed += acc
 
                 # prevent cars from going backwards.
                 if car.speed < 0:
                     car.speed = 0
             else:
+                # No leading car (free flow)
                 gap = 10000
-
                 car.speed += car.comp_acc(gap, car.max_speed)
 
                 if car.speed < 0:
                     car.speed = 0
 
+            # Move the car
             car.move()
+
+            # Remove cars that exit the screen
             if car.x > WIDTH:
-
-                trafficcount += 1
-                trafficcountie += 1
-
-                # print('car has exited', car.speed, car.max_speed)
-
-                print(car.speed, car.max_speed)
+                traf_count += 1
                 road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
 
 
-        # quit pygame
+
+        # End the simulation when the set time has been reached
+        if seconds > length_of_simulation:
+            pygame.quit()
+            # total average number of vehicles per time interval
+            trafficflow = (np.sum(traf_counts) / seconds) *t
+            return trafficflow, traf_counts , timestamps
+
+
+
+        # End the simulation when esc is pressed or the window is closed
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
@@ -372,12 +354,9 @@ def traffic(max_speed):
                     tijd.sleep(4)
 
             if event.type == pygame.QUIT:
-                # total average number of vehicles per time interval
-                trafficflow = (trafficcount / seconds) *t
                 pygame.quit()
-                return trafficflow, graphie, graphieint, timie
 
-        # make pygame
+        # Make pygame
         frame.blit(background_image, [0, 0])
         all_cars.draw(frame)
         display.update()
@@ -387,17 +366,65 @@ def traffic(max_speed):
 
 
 if __name__ == '__main__':
-    # # run traffic lower speed
-    # average_tf_l, cummulative_tf_l, interval_tf_l, timeline_l = traffic(100)
-    # # run traffic higher speed
-    # average_tf_h, cummulative_tf_h, interval_tf_h, timeline_h = traffic(130)
-    # # plt.plot(timeline, cummulative_tf, label="Cummulative trafficflow", c="#7F98FF")
-    # # plt.plot(timeline, interval_tf, label="Trafficflow per time unit", c="#3152D4")
-    # # plt.plot(timeline, [average_tf] * len(timeline), label="Average trafficflow", c="#001F9A")
-    # plt.plot(timeline_l, cummulative_tf_l, label="Cummulative trafficflow", c="lightblue")
-    # plt.plot(timeline_l, interval_tf_l, label="Trafficflow per time unit", c="blue")
-    # plt.plot(timeline_l, [average_tf_l] * len(timeline_l), label="Average trafficflow", c="darkblue")
-    # plt.legend()
-    # plt.show()
 
-    traffic(130)
+    # Set to True or False depending on what simulation you want to run.
+    # When set to True, more cars will be spawned on the road. When set to False, less cars will be created
+    rush_hour = True
+
+    # Set variables depending on Rush Hour for user friendliness
+    if rush_hour == True:
+        spawn_rate = 0.3
+        plt.title("Traffic Flow at Different Speeds During Rush Hour")
+        title = "RushHour"
+    elif rush_hour == False:
+        spawn_rate = 0.1
+        plt.title("Traffic Flow at Different Speeds Outside Rush Hour")
+        title = "NoRushHour"
+
+    # Initialize arrays to save datapoints
+    intervals1 = np.array([0] * 31)
+    intervals2 = np.array([0] * 31)
+    intervals3 = np.array([0] * 31)
+    tf80 = []
+    tf100 = []
+    tf130 = []
+
+    # Run each different speed ten times. Save the total traffic flow and the traffic flow during each interval
+    for i in range(10):
+        print("You are now running round ", i, " of 10")
+
+        tf_l, interval_l, time_l = traffic(80, spawn_rate)
+        tf80.append(tf_l)
+        intervals1 = np.add(intervals1, np.array(interval_l))
+
+        tf_l, interval_l, time_l = traffic(100, spawn_rate)
+        tf100.append(tf_l)
+        intervals2 = np.add(intervals2, np.array(interval_l))
+
+        tf_l, interval_l, time_l = traffic(130, spawn_rate)
+        tf130.append(tf_l)
+        intervals3 = np.add(intervals3, np.array(interval_l))
+
+    # Create plot figure
+    plt.figure(figsize=(20,10))
+    plt.rcParams.update({'font.size': 22})
+
+    # Plot the intervals and the average traffic flow of each speed
+    plt.plot(time_l, intervals1 / 10, label="Trafficflow per time unit at %i km/h" % (80), c="green")
+    plt.plot(time_l, [np.mean(tf80)] * len(time_l), label="Average trafficflow at %i km/h" % (80), c="lightgreen")
+
+    plt.plot(time_l, intervals2 / 10, label="Trafficflow per time unit at %i km/h" % (100), c="blue")
+    plt.plot(time_l, [np.mean(tf100)] * len(time_l), label="Average trafficflow at %i km/h" % (100), c="lightblue")
+
+    plt.plot(time_l, intervals3 / 10, label="Trafficflow per time unit at %i km/h" % (130), c="red")
+    plt.plot(time_l, [np.mean(tf130)]  * len(time_l), label="Average trafficflow at %i km/h" % (130), c="pink")
+
+    # Set graph attributes
+    plt.xlabel("Time in seconds")
+    plt.ylabel("Number of vehicles")
+    plt.legend(loc=4)
+    plt.savefig('TrafficFlow'+str(title)+'.png')
+    plt.show()
+
+    # Perform statistical analysis
+    stat_an(title, intervals1, intervals2, intervals3)
