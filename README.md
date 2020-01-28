@@ -3,16 +3,14 @@
 This is a traffic model to simulate the traffic flow on Dutch highways.
 
 When you start the simulation, please let your computer run the trials.
-Don't make use of the mouse or anything else as this affects the simulation and will make the results non-reproducable.
-The current settings that create the graph below let the model run for little over *30 minutes*. We know. We recommend making yourself some food or start a new hobby. 
+One simulation will take a little over 30 minutes. For both graphs it will take a little over an hour. During this time we ask you to leave your computer alone, as the mouse and other internal proccesses affect the results. Which will make it not reproducable.
 
 
 ## How to use
-Have pygame installed
+Have the requirments installed as mentioned in requirments.txt
+Run traffic_sim.py
 
-In line ... set if you want to run the simulation in a rush hour situation or not
-
-If you have generated the graphs below, you can make some adjustments to run your own simulation
+If you have generated the graphs you can compare it to the graphs folder, you can make some adjustments to run your own simulation
 change duration of simulation, t and length
 
 
