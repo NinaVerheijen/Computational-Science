@@ -7,11 +7,15 @@ One simulation will take a little over 30 minutes. For both graphs it will take 
 
 
 ## How to use
-Have the requirments installed as mentioned in requirments.txt
-Run traffic_sim.py
+Run "pip install -r requirements.txt" to install all following requirements.
 
-If you have generated the graphs you can compare it to the graphs folder, you can make some adjustments to run your own simulation
-change duration of simulation, t and length
+Run traffic_sim.py to execute the program.
+If you want to run a rush hour simulation, set the rush_hour variable (line 371) to True. If you want to run a non rush hour simulation, set the variable to False.
+
+You should run both situations to create both graphs.
+
+If you want to run more simulations (different from our already generated graphs), you can change the arguments when traffic(speed, spawn_rate) is called. A higher spawnrate means more cars. 
+Furthermore, you can alter the duration of the simulation by changing length_of_simulation (line 249) and length ()
 
 
 There are 3 ways to end the simulation:
