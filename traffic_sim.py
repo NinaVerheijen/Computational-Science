@@ -239,9 +239,9 @@ def stat_an(title, samples1, samples2, samples3):
 
     file = open(str(title) + "T-Test.txt","w")
     file.write("Below you find the p and t values of the student t-test executed on the three different speeds.\n")
-    file.write("80 vs 100 \t | \t t = " + str(t1) + "\t | \t p = " + str(p1))
-    file.write("100 vs 130 \t | \t t = " + str(t2) + "\t | \t p = " + str(p2))
-    file.write("130 vs 80 \t | \t t = " + str(t3) +" \t | \t p = " + str(p3))
+    file.write("80 vs 100 \t | \t t = " + str(t1) + "\t | \t p = " + str(p1)"\n")
+    file.write("100 vs 130 \t | \t t = " + str(t2) + "\t | \t p = " + str(p2)"\n")
+    file.write("130 vs 80 \t | \t t = " + str(t3) +" \t | \t p = " + str(p3)"\n")
     file.close()
 
 # Main function that simulates the traffic
@@ -263,7 +263,6 @@ def traffic(max_speed, car_density):
     traf_count = 0
     traf_counts = []
     timestamps = []
-
 
     all_cars = Group()
 
@@ -334,16 +333,12 @@ def traffic(max_speed, car_density):
                 road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
 
-
-
         # End the simulation when the set time has been reached
         if seconds > length_of_simulation:
             pygame.quit()
             # total average number of vehicles per time interval
             trafficflow = (np.sum(traf_counts) / seconds) *t
             return trafficflow, traf_counts , timestamps
-
-
 
         # End the simulation when esc is pressed or the window is closed
         for event in pygame.event.get():
@@ -369,28 +364,29 @@ if __name__ == '__main__':
 
     # Set to True or False depending on what simulation you want to run.
     # When set to True, more cars will be spawned on the road. When set to False, less cars will be created
-    rush_hour = True
+    rush_hour = False
 
     # Set variables depending on Rush Hour for user friendliness
     if rush_hour == True:
         spawn_rate = 0.3
-        plt.title("Traffic Flow at Different Speeds During Rush Hour")
+        # plt.title("Traffic Flow at Different Speeds During Rush Hour")
         title = "RushHour"
     elif rush_hour == False:
         spawn_rate = 0.1
-        plt.title("Traffic Flow at Different Speeds Outside Rush Hour")
+        # plt.title("Traffic Flow at Different Speeds Outside Rush Hour")
         title = "NoRushHour"
 
-    # Initialize arrays to save datapoints
-    intervals1 = np.array([0] * 31)
-    intervals2 = np.array([0] * 31)
-    intervals3 = np.array([0] * 31)
+    # Initialize arrays to save datapoints, length depends on duration of the simulation and the timestamps
+    length = 31
+    intervals1 = np.array([0] * length)
+    intervals2 = np.array([0] * length)
+    intervals3 = np.array([0] * length)
     tf80 = []
     tf100 = []
     tf130 = []
 
     # Run each different speed ten times. Save the total traffic flow and the traffic flow during each interval
-    for i in range(10):
+    for i in range(1):
         print("You are now running round ", i, " of 10")
 
         tf_l, interval_l, time_l = traffic(80, spawn_rate)
@@ -420,11 +416,15 @@ if __name__ == '__main__':
     plt.plot(time_l, [np.mean(tf130)]  * len(time_l), label="Average trafficflow at %i km/h" % (130), c="pink")
 
     # Set graph attributes
+    if rush_hour == True:
+        plt.title("Traffic Flow at Different Speeds During Rush Hour")
+    elif rush_hour == False:
+        plt.title("Traffic Flow at Different Speeds Outside Rush Hour")
     plt.xlabel("Time in seconds")
     plt.ylabel("Number of vehicles")
     plt.legend(loc=4)
-    plt.savefig('TrafficFlow'+str(title)+'.png')
     plt.show()
+    plt.savefig('TrafficFlows'+str(title)+'.png')
 
     # Perform statistical analysis
     stat_an(title, intervals1, intervals2, intervals3)
