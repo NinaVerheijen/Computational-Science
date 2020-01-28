@@ -212,7 +212,7 @@ def lane_switching(car, road, all_cars):
 
     return index
 
-
+"""
     # if car.y in road.pos_lanes:
     #     car.left_or_right = random.uniform(0, 1)
     #     # exception if most left lane or most right lane
@@ -286,7 +286,7 @@ def lane_switching(car, road, all_cars):
         #             if car in road.lanes[int(car.lane-1)]:
         #                 road.lanes[int(car.lane - 1)].remove(car)
         # return(index)
-
+"""
 
 # Returns gap from bumper to bumper in meters.
 def compute_gap(follower, leader):
@@ -385,35 +385,33 @@ def traffic(max_speed, car_density):
 
             change_lanes = random.uniform(0, 1)
 
-            if change_lanes < 0.9:
-                car.switch = True
+           
 
             next_car, prev_car = neighbour_cars(road, car)
 
-            if car.switch is True:
-                if car.is_switching is False:
-                    index = lane_switching(car, road, all_cars)
+            if car.is_switching is False:
+                index = lane_switching(car, road, all_cars)
 
-                # Y changing from the car to new lane
-                if car.can_switch == True:
-                    car.y += car.left_right
-                    # car.lane = (car.y-29) / 10
-                    # road.lanes[int(car.lane-1)].insert(index, car)
-
-
-                # lane switch complete
-                if car.can_switch == True:
-                    if car.y in road.pos_lanes:
-
-                        car.switch = False
-                        car.can_switch = False
-                        car.is_switching = False
+            # Y changing from the car to new lane
+            if car.can_switch == True:
+                car.y += car.left_right
+                # car.lane = (car.y-29) / 10
+                # road.lanes[int(car.lane-1)].insert(index, car)
 
 
-                        if car.model == 'car':
-                            car.image.fill((255,0,0))
-                        else:
-                            car.image.fill((0, 0, 255))
+            # lane switch complete
+            if car.can_switch == True:
+                if car.y in road.pos_lanes:
+
+                    car.switch = False
+                    car.can_switch = False
+                    car.is_switching = False
+
+
+                    if car.model == 'car':
+                        car.image.fill((255,0,0))
+                    else:
+                        car.image.fill((0, 0, 255))
 
             if next_car is not None:
                 gap = compute_gap(car, next_car)
@@ -442,6 +440,11 @@ def traffic(max_speed, car_density):
                 traf_count += 1
                 # print('car has exited', car.speed, car.max_speed)
 
+                # trafficcount += 1
+                # trafficcountie += 1
+
+
+
                 road.lanes[int(car.lane - 1)].pop()
                 all_cars.remove(car)
 
@@ -462,6 +465,16 @@ def traffic(max_speed, car_density):
                     pygame.quit()
                 if event.key == K_SPACE:
                     tijd.sleep(4)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+
+                close = [cars for cars in all_cars if cars.x < x and cars.x > x-20 and cars.y < y and car.y > y-10]
+                # for cars in all_cars:
+                #     if cars
+                # if car.x < x+10 and car.x > x - 20:
+                for c in close:
+                    print(c.__dict__)
+
 
             if event.type == pygame.QUIT:
                 pygame.quit()
