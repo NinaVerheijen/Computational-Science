@@ -12,7 +12,7 @@ from scipy import stats
 from pygame import *
 from pygame.locals import *
 from pygame.sprite import *
-from Vehicle import Vehicle
+from vehicle import Vehicle
 from road import Road
 
 # Open the simulation in the upper left corner
@@ -258,7 +258,7 @@ def traffic(max_speed, car_density):
     clock = pygame.time.Clock()
     clock.tick(60)
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
-    background_image = pygame.image.load("4baans.png")
+    background_image = pygame.image.load("Images/4lanes.png")
 
  
     start_ticks=pygame.time.get_ticks()
