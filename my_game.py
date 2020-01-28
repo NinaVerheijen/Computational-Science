@@ -8,18 +8,15 @@ import random
 import bisect
 import time as tijd
 import matplotlib.pyplot as plt
+from scipy import stats
 from pygame import *
 from pygame.locals import *
 from pygame.sprite import *
 from Vehicle import Vehicle
 from road import Road
 
-# from Vehicle import Vehicle
+# Open the simulation in the upper left corner
 os.environ['SDL_VIDEO_WINDOW_POS'] = '0,0'
-
-# background 2 or 3 lanes
-# background_image = pygame.image.load("2baans.png")
-background_image = pygame.image.load("3baans.png")
 
 
 
@@ -27,6 +24,7 @@ WIDTH = 1920
 HEIGHT = 100
 road_length = 12
 pygame.display.set_caption('Traffic Simulator')
+
 
 # Convert meters to pixels
 def meter_to_pixel(distance):
@@ -233,22 +231,41 @@ def neighbour_cars(road, car):
 
     return next_car, prev_car
 
+
+# This function performs the two-tail Student T-Test on three arrays of data.
+# The t and p values are written to a textfile
+def stat_an(title, samples1, samples2, samples3):
+    t1, p1 = stats.ttest_ind(samples1, samples2, axis=0, equal_var=False)
+    t2, p2 = stats.ttest_ind(samples2, samples3, axis=0, equal_var=False)
+    t3, p3 = stats.ttest_ind(samples3, samples1, axis=0, equal_var=False)
+
+    file = open(str(title) + "T-Test.txt","w")
+    file.write("Below you find the p and t values of the student t-test executed on the three different speeds.\n")
+    file.write("80 vs 100 \t | \t t = " + str(t1) + "\t | \t p = " + str(p1))
+    file.write("100 vs 130 \t | \t t = " + str(t2) + "\t | \t p = " + str(p2))
+    file.write("130 vs 80 \t | \t t = " + str(t3) +" \t | \t p = " + str(p3))
+    file.close()
+
 # Main function that simulates the traffic
 def traffic(max_speed, car_density):
+    # Set the duration of one simulation in seconds
+    length_of_simulation = 60
+    # Time interval in seconds for datapoint saving
+    t = 2
 
     # Initiate the simulation
     pygame.init()
     clock = pygame.time.Clock()
     clock.tick(60)
     frame = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+    background_image = pygame.image.load("4baans.png")
 
  
     start_ticks=pygame.time.get_ticks()
     traf_count = 0
     traf_counts = []
     timestamps = []
-    # graph time interval
-    t = 2
+    
 
     all_cars = Group()
 
@@ -257,11 +274,10 @@ def traffic(max_speed, car_density):
 
     while True:
         tijd.sleep(0.00000000000000000000000000000000000000000000000000000005)
-        seconds=(pygame.time.get_ticks()-start_ticks)/1000
+        seconds = (pygame.time.get_ticks()-start_ticks)/1000
 
-
+        # Increment counters when an interval has been completed
         if int(seconds) % t == 0 and int(seconds) not in timestamps:
-            print(int(seconds))
             timestamps.append(int(seconds))
             traf_counts.append(traf_count)
             traf_count = 0
@@ -321,14 +337,17 @@ def traffic(max_speed, car_density):
                 all_cars.remove(car)
 
 
-        # Quit pygame
-        if seconds > 30:
+
+        # End the simulation when the set time has been reached
+        if seconds > length_of_simulation:
             pygame.quit()
+            # total average number of vehicles per time interval
             trafficflow = (np.sum(traf_counts) / seconds) *t
             return trafficflow, traf_counts , timestamps
 
 
-        # Exit game
+
+        # End the simulation when esc is pressed or the window is closed
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
@@ -338,9 +357,6 @@ def traffic(max_speed, car_density):
 
             if event.type == pygame.QUIT:
                 pygame.quit()
-                # total average number of vehicles per time interval
-                trafficflow = (np.sum(traf_counts) / seconds) *t
-                return trafficflow, traf_counts , timestamps
 
         # Make pygame
         frame.blit(background_image, [0, 0])
@@ -353,48 +369,64 @@ def traffic(max_speed, car_density):
 
 if __name__ == '__main__':
 
-    # intervals1 = np.array([0] * 16)
-    # intervals2 = np.array([0] * 16)
-    # intervals3 = np.array([0] * 16)
-    # tf80 = []
-    # tf100 = []
-    # tf130 = []
+    # Set to True or False depending on what simulation you want to run.
+    # When set to True, more cars will be spawned on the road. When set to False, less cars will be created
+    rush_hour = True
 
+    # Set variables depending on Rush Hour for user friendliness
+    if rush_hour == True:
+        spawn_rate = 0.3
+        plt.title("Traffic Flow at Different Speeds During Rush Hour")
+        title = "RushHour"
+    elif rush_hour == False:
+        spawn_rate = 0.1
+        plt.title("Traffic Flow at Different Speeds Outside Rush Hour")
+        title = "NoRushHour"
 
-    # for i in range(10):
-    #     tf_l, interval_l, time_l = traffic(80, 0.3)
-    #     tf80.append(tf_l)
-    #     intervals1 = np.add(intervals1, np.array(interval_l))
+    # Initialize arrays to save datapoints
+    intervals1 = np.array([0] * 31)
+    intervals2 = np.array([0] * 31)
+    intervals3 = np.array([0] * 31)
+    tf80 = []
+    tf100 = []
+    tf130 = []
 
-    #     tf_l, interval_l, time_l = traffic(100, 0.3)
-    #     tf100.append(tf_l)
-    #     intervals2 = np.add(intervals2, np.array(interval_l))
+    # Run each different speed ten times. Save the total traffic flow and the traffic flow during each interval
+    for i in range(10):
+        print("You are now running round ", i, " of 10")
 
-    #     tf_l, interval_l, time_l = traffic(130, 0.3)
-    #     tf130.append(tf_l)
-    #     intervals3 = np.add(intervals3, np.array(interval_l))
+        tf_l, interval_l, time_l = traffic(80, spawn_rate)
+        tf80.append(tf_l)
+        intervals1 = np.add(intervals1, np.array(interval_l))
 
-    # plt.figure(figsize=(20,10))
-    # plt.plot(time_l, intervals1 / 10, label="Trafficflow per time unit %i, %i" % (80, 0.3), c="green")
-    # plt.plot(time_l, [np.mean(tf80)] * len(time_l), label="Average trafficflow %i, %i" % (80, 0.3), c="lightgreen")
+        tf_l, interval_l, time_l = traffic(100, spawn_rate)
+        tf100.append(tf_l)
+        intervals2 = np.add(intervals2, np.array(interval_l))
 
-    # plt.plot(time_l, intervals2 / 10, label="Trafficflow per time unit %i, %i" % (100, 0.3), c="blue")
-    # plt.plot(time_l, [np.mean(tf100)] * len(time_l), label="Average trafficflow %i, %i" % (100, 0.3), c="lightblue")
+        tf_l, interval_l, time_l = traffic(130, spawn_rate)
+        tf130.append(tf_l)
+        intervals3 = np.add(intervals3, np.array(interval_l))
 
-    # plt.plot(time_l, intervals3 / 10, label="Trafficflow per time unit %i, %i" % (130, 0.3), c="red")
-    # plt.plot(time_l, [np.mean(tf130)]  * len(time_l), label="Average trafficflow %i, %i" % (130, 0.3), c="pink")
+    # Create plot figure
+    plt.figure(figsize=(20,10))
+    plt.rcParams.update({'font.size': 22})
 
-    # plt.xlabel("Time in seconds")
-    # plt.ylabel("Number of vehicles")
-    # plt.title("Traffic flow")
-    # plt.legend()
-    # plt.show()
+    # Plot the intervals and the average traffic flow of each speed
+    plt.plot(time_l, intervals1 / 10, label="Trafficflow per time unit at %i km/h" % (80), c="green")
+    plt.plot(time_l, [np.mean(tf80)] * len(time_l), label="Average trafficflow at %i km/h" % (80), c="lightgreen")
 
-    # plt.plot(time_l, np.cumsum(intervals1), label="Cummulative trafficflow %i, %i" % (80, 0.3), c="lightgreen")
-    # plt.plot(time_l, np.cumsum(intervals2), label="Cummulative trafficflow %i, %i" % (100, 0.3), c="lightblue")
-    # plt.plot(time_l, np.cumsum(intervals3), label="Cummulative trafficflow %i, %i" % (130, 0.3), c="pink")
-    # plt.legend()
-    # plt.show()
+    plt.plot(time_l, intervals2 / 10, label="Trafficflow per time unit at %i km/h" % (100), c="blue")
+    plt.plot(time_l, [np.mean(tf100)] * len(time_l), label="Average trafficflow at %i km/h" % (100), c="lightblue")
 
+    plt.plot(time_l, intervals3 / 10, label="Trafficflow per time unit at %i km/h" % (130), c="red")
+    plt.plot(time_l, [np.mean(tf130)]  * len(time_l), label="Average trafficflow at %i km/h" % (130), c="pink")
 
-    traffic(130, 0.3)
+    # Set graph attributes
+    plt.xlabel("Time in seconds")
+    plt.ylabel("Number of vehicles")
+    plt.legend(loc=4)
+    plt.savefig('TrafficFlow'+str(title)+'.png')
+    plt.show()
+
+    # Perform statistical analysis
+    stat_an(title, intervals1, intervals2, intervals3)
