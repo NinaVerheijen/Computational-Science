@@ -6,7 +6,7 @@ One simulation will take a little over 30 minutes. For both graphs it will take 
 
 
 ## How to use
-0. Make sure PyGame is installed and please install any other missing not-already-installed modules (they will be mentioned when you run the code and it does not work.
+0. Make sure the Python modules mentioned in "requirements.txt" are installed.
 1. Set the rush_hour variable in the main function at the end of the file to True or False depending on what simulation you want to run. True simulates rush hours, False simulates off-peak hours. 
 2. Run traffic_sim.py to execute the program. As said before, this will take _30 minutes_ and we ask you to not use your computer for anything else during that time. 
 3. After 30 minutes a graph with the results shows. You can save this one if you like, but it is automatically saved in the same folder as well.
