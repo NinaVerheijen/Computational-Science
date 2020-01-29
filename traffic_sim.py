@@ -270,7 +270,7 @@ def traffic(max_speed, car_density):
     road = Road(4)
 
     while True:
-        tijd.sleep(0.000000000000005)
+        tijd.sleep(0.005)
         seconds = (pygame.time.get_ticks() - start_ticks)/1000
 
         # Increment counters when an interval has been completed
