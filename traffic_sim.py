@@ -26,14 +26,14 @@ pygame.display.set_caption('Traffic Simulator')
 
 # Convert meters to pixels
 def meter_to_pixel(distance):
-    one_m = WIDTH/(road_length * 1000)
-    dist = distance* one_m
+    one_m = WIDTH / (road_length * 1000)
+    dist = distance * one_m
     return dist
 
 # Convert pixels to meters
 def pixel_to_meter(pixels):
-    one_p = (road_length * 1000)/WIDTH
-    dist = one_p*pixels
+    one_p = (road_length * 1000) / WIDTH
+    dist = one_p * pixels
     return dist
 
 # Create vehicles
@@ -44,11 +44,11 @@ def vehicle_spawn(road, all_cars, max_speed, car_density):
         # Chance that the spawned vehicle is a truck
         truck_chance = random.uniform(0,1)
         if truck_chance < 0.80:
-            vehicle = Vehicle('car', max_speed, (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10,10,2))
+            vehicle = Vehicle('car', max_speed, (255, 0, 0), [24/2, 12/2], 10, random.choice(road.pos_lanes), 100 + random.randrange(-10, 10, 2))
         else:
             # Trucks spawning more on the right lane
             choice = random.choices(population = road.pos_lanes, weights = [0, 0.01, 0.1, 0.85])
-            vehicle = Vehicle('truck', max_speed, (0, 0, 255), [98/2, 14/2], 10, choice[0], 80 + random.randrange(-5,5,1))
+            vehicle = Vehicle('truck', max_speed, (0, 0, 255), [98/2, 14/2], 10, choice[0], 80 + random.randrange(-5, 5, 1))
 
         # Don't spawn vehicles on top of eachother
         if not spritecollideany(vehicle, all_cars):
@@ -183,7 +183,7 @@ def lane_switching(car, road, all_cars):
             road.lanes[int(car.lane - 1)].remove(car)
 
             car.lane = car.lane + car.left_right
-            road.lanes[int(car.lane-1)].insert(index, car)
+            road.lanes[int(car.lane - 1)].insert(index, car)
 
 # Returns gap from bumper to bumper in meters.
 def compute_gap(follower, leader):
@@ -223,9 +223,9 @@ def neighbour_cars(road, car):
         find_index = road.lanes[int(car.lane - 1)].index(car)
 
         if find_index + 1 is not len(road.lanes[int(car.lane - 1)]):
-            next_car = road.lanes[int(car.lane - 1)][find_index+1]
+            next_car = road.lanes[int(car.lane - 1)][find_index + 1]
         if find_index is not 0:
-            prev_car = road.lanes[int(car.lane - 1)][find_index-1]
+            prev_car = road.lanes[int(car.lane - 1)][find_index - 1]
 
     return next_car, prev_car
 
@@ -270,8 +270,8 @@ def traffic(max_speed, car_density):
     road = Road(4)
 
     while True:
-        tijd.sleep(0.00000000000000000000000000000000000000000000000000000005)
-        seconds = (pygame.time.get_ticks()-start_ticks)/1000
+        tijd.sleep(0.000000000000005)
+        seconds = (pygame.time.get_ticks() - start_ticks)/1000
 
         # Increment counters when an interval has been completed
         if int(seconds) % t == 0 and int(seconds) not in timestamps:
@@ -303,7 +303,7 @@ def traffic(max_speed, car_density):
 
                     # Visualisation for car back in lane
                     if car.model == 'car':
-                        car.image.fill((255,0,0))
+                        car.image.fill((255, 0, 0))
                     else:
                         car.image.fill((0, 0, 255))
 
@@ -337,7 +337,7 @@ def traffic(max_speed, car_density):
         if seconds > length_of_simulation:
             pygame.quit()
             # total average number of vehicles per time interval
-            trafficflow = (np.sum(traf_counts) / seconds) *t
+            trafficflow = (np.sum(traf_counts) / seconds) * t
             return trafficflow, traf_counts , timestamps
 
         # End the simulation when esc is pressed or the window is closed
@@ -402,7 +402,7 @@ if __name__ == '__main__':
         intervals3 = np.add(intervals3, np.array(interval_l))
 
     # Create plot figure
-    plt.figure(figsize=(20,10))
+    plt.figure(figsize=(20, 10))
     plt.rcParams.update({'font.size': 22})
 
     # Plot the intervals and the average traffic flow of each speed

@@ -15,14 +15,14 @@ road_length = 12
 
 # Convert meters to pixels
 def meter_to_pixel(distance):
-    one_m = WIDTH/(road_length * 1000)
-    dist = distance*one_m
+    one_m = WIDTH / (road_length * 1000)
+    dist = distance * one_m
 
     return dist
 
 # Convert pixels to meters 
 def pixel_to_meter(pixels):
-    one_p = (road_length * 1000)/WIDTH
+    one_p = (road_length * 1000) / WIDTH
     dist = pixels*one_p
 
     return dist
@@ -56,7 +56,7 @@ class Vehicle(pygame.sprite.Sprite):
         self.size = size
         self.image = pygame.Surface(self.size)
         self.image.fill(color)
-        self.lane = (lane-29) / 10
+        self.lane = (lane - 29) / 10
         self.speed  = speed * (1 - self.lane/100*10)
         self.model = model
         self.x = int(x) 
@@ -78,7 +78,7 @@ class Vehicle(pygame.sprite.Sprite):
         else:
             self.max_speed = maximumspeed * self.aggression
             self.bias_left = 0.5
-            self.bias_right = -0.2 + (self.lane*0.1)
+            self.bias_right = -0.2 + (self.lane * 0.1)
 
         # 50% chance to go faster, more likely to go little bit faster than alot
         chance = random.uniform(0,1)
@@ -89,7 +89,7 @@ class Vehicle(pygame.sprite.Sprite):
             if too_fast <= 0.1:
                 self.max_speed = self.max_speed + speed
             else:
-                self.max_speed = self.max_speed + random.randint(3,10)
+                self.max_speed = self.max_speed + random.randint(3, 10)
 
         self.gap_want = 50 * (2 - self.aggression)
 
@@ -113,13 +113,13 @@ class Vehicle(pygame.sprite.Sprite):
         if self.model == 'truck':
             s_0 = self.gap_want + 20
             a = 0.25 * (self.aggression) 
-            T = 2 * (2- self.aggression)
+            T = 2 * (2 - self.aggression)
         else:
             # minimum gap between cars
             s_0 = self.gap_want  
             a = 0.3 * (self.aggression) 
             T = 1.5 * (2 - self.aggression)
-        des_gap = s_0 + max(0, v*T + ((v*d_v)/ (2*Math.sqrt(a*b))))
+        des_gap = s_0 + max(0, v * T + ((v * d_v) / (2 * Math.sqrt(a * b))))
         return des_gap
 
     # Compute acceleration
@@ -130,8 +130,8 @@ class Vehicle(pygame.sprite.Sprite):
         d = 4
         d_v = abs(v - lead_speed) 
         
-        a_free = a*(1-(v/v_0)**d)
-        a_int = a*((self.desired_gap(v, d_v) / s)**2)
+        a_free = a * (1-(v / v_0)**d)
+        a_int = a * ((self.desired_gap(v, d_v) / s)**2)
         acc =  a_free - a_int
         return acc
 
