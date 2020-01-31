@@ -386,7 +386,7 @@ if __name__ == '__main__':
     tf130 = []
 
     # Run each different speed ten times. Save the total traffic flow and the traffic flow during each interval
-    for i in range(1):
+    for i in range(10):
         print("You are now running round ", i, " of 10")
 
         tf_l, interval_l, time_l = traffic(80, spawn_rate)
